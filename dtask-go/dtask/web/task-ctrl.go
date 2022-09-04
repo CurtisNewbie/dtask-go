@@ -11,7 +11,7 @@ import (
 func RegisterTaskRoutes(router *gin.Engine) {
 
 	router.POST(server.ResolvePath("/dtask/task/list", true), ListTaskByPageEndpoint)
-	router.POST(server.ResolvePath("/dtask/task/history", true), listTaskHistoryByPageEndpoint)
+	router.POST(server.ResolvePath("/dtask/task/history", true), ListTaskHistoryByPageEndpoint)
 	router.POST(server.ResolvePath("/dtask/task/update", true), UpdateTaskEndpoint)
 	router.POST(server.ResolvePath("/dtask/task/trigger", true), TriggerTaskEndpoint)
 }
@@ -32,7 +32,7 @@ func ListTaskByPageEndpoint(c *gin.Context) {
 }
 
 // List task histories
-func listTaskHistoryByPageEndpoint(c *gin.Context) {
+func ListTaskHistoryByPageEndpoint(c *gin.Context) {
 	user := util.RequireUser(c)
 
 	var req domain.ListTaskHistoryByPageReq
