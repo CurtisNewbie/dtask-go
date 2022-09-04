@@ -8,11 +8,39 @@ import (
 )
 
 type TaskEnabled int
+type TaskConcurrentEnabled int
 
 const (
 	TASK_ENABLED  TaskEnabled = 1
 	TASK_DISABLED TaskEnabled = 0
+
+	TASK_CONCURRENT_ENABLED  TaskConcurrentEnabled = 1
+	TASK_CONCURRENT_DISABLED TaskConcurrentEnabled = 0
 )
+
+type UpdateTaskReq struct {
+
+	/** id */
+	Id int `json:"id"`
+
+	/** job's name */
+	JobName *string `json:"jobName"`
+
+	/** name of bean that will be executed */
+	TargetBean *string `json:"targetBean"`
+
+	/** cron expression */
+	CronExpr *string `json:"cronExpr"`
+
+	/** app group that runs this task */
+	AppGroup *string `json:"appGroup"`
+
+	/** whether the task is enabled: 0-disabled, 1-enabled */
+	Enabled *TaskEnabled `json:"enabled"`
+
+	/** whether the task can be executed concurrently: 0-disabled, 1-enabled */
+	ConcurrentEnabled *TaskConcurrentEnabled `json:"concurrentEnabled"`
+}
 
 type TaskWebVo struct {
 
@@ -44,7 +72,7 @@ type TaskWebVo struct {
 	Enabled TaskEnabled `json:"enabled"`
 
 	/** whether the task can be executed concurrently: 0-disabled, 1-enabled */
-	ConcurrentEnabled int `json:"concurrentEnabled"`
+	ConcurrentEnabled TaskConcurrentEnabled `json:"concurrentEnabled"`
 
 	/** update date */
 	UpdateDate dto.WTime `json:"updateDate"`
@@ -69,6 +97,42 @@ type ListTaskByPageReqWebVo struct {
 
 	/** whether the task is enabled: 0-disabled, 1-enabled */
 	Enabled *TaskEnabled `json:"enabled"`
+}
+
+// Update task
+func UpdateTask(user *util.User, req *UpdateTaskReq) error {
+
+	util.RequireRole(user, util.ADMIN)
+
+	qry := config.GetDB()
+	qry.Where("id = ?", req.Id)
+
+	umap := make(map[string]any)
+
+	if util.IsEmpty(req.JobName) {
+		umap["job_name"] = *req.JobName
+	}
+	if util.IsEmpty(req.TargetBean) {
+		umap["target_bean"] = *req.TargetBean
+	}
+	if util.IsEmpty(req.CronExpr) {
+		umap["cron_expr"] = *req.CronExpr
+	}
+	if util.IsEmpty(req.AppGroup) {
+		umap["app_group"] = *req.AppGroup
+	}
+	if req.Enabled != nil {
+		umap["enabled"] = *req.Enabled
+	}
+	if req.ConcurrentEnabled != nil {
+		umap["concurrent_enabled"] = *req.ConcurrentEnabled
+	}
+
+	tx := qry.Updates(umap)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	return nil
 }
 
 // List tasks

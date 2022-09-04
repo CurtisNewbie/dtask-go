@@ -7,6 +7,8 @@ github.com/curtisnewbie/gocommon v0.0.0-20220904073154-5f50e2fffda2 h1:peGLVXBcn
 github.com/curtisnewbie/gocommon v0.0.0-20220904073154-5f50e2fffda2/go.mod h1:Kgt1FtJsqAfJFZe9ivQDOfHNOpKMhzJWrFcDTRN0+d4=
 github.com/curtisnewbie/gocommon v0.0.0-20220904073645-212292f71622 h1:JikpFpXwe+lJ5wvN0MdVyS192K0Rf50MfXASoZLf4C8=
 github.com/curtisnewbie/gocommon v0.0.0-20220904073645-212292f71622/go.mod h1:Kgt1FtJsqAfJFZe9ivQDOfHNOpKMhzJWrFcDTRN0+d4=
+github.com/curtisnewbie/gocommon v0.0.0-20220904081459-f39dc92089f2 h1:B2f6nqrwWgaZYeBJwe6G1of2evWoQNsobn2/pLja4bk=
+github.com/curtisnewbie/gocommon v0.0.0-20220904081459-f39dc92089f2/go.mod h1:Kgt1FtJsqAfJFZe9ivQDOfHNOpKMhzJWrFcDTRN0+d4=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

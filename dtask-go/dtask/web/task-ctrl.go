@@ -46,8 +46,19 @@ func listTaskHistoryByPageEndpoint(c *gin.Context) {
 	util.DispatchJson(c, r)
 }
 
+// Update task info
 func UpdateTaskEndpoint(c *gin.Context) {
-	// todo
+	user := util.RequireUser(c)
+
+	var req domain.UpdateTaskReq
+	util.MustBindJson(c, &req)
+
+	e := domain.UpdateTask(user, &req)
+	if e != nil {
+		util.DispatchErrJson(c, e)
+		return
+	}
+	util.DispatchOk(c)
 }
 
 func TriggerTaskEndpoint(c *gin.Context) {
