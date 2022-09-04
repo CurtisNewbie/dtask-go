@@ -68,7 +68,7 @@ func ListTaskHistoryByPage(user *util.User, req *ListTaskHistoryByPageReq) (*Lis
 	}
 
 	var histories []TaskHistoryWebVo
-	selectq := config.GetDB().Limit(req.Paging.Limit).Offset(dto.CalcOffset(req.Paging))
+	selectq := config.GetDB().Table("task_history").Limit(req.Paging.Limit).Offset(dto.CalcOffset(req.Paging))
 	_addWhereForListTaskHistoryByPage(req, selectq)
 
 	tx := selectq.Scan(&histories)
@@ -79,7 +79,7 @@ func ListTaskHistoryByPage(user *util.User, req *ListTaskHistoryByPageReq) (*Lis
 		histories = []TaskHistoryWebVo{}
 	}
 
-	countq := config.GetDB().Select("COUNT(*)")
+	countq := config.GetDB().Table("task_history").Select("COUNT(*)")
 	_addWhereForListTaskHistoryByPage(req, countq)
 	var total int
 	tx = countq.Scan(&total)
@@ -94,7 +94,7 @@ func _addWhereForListTaskHistoryByPage(req *ListTaskHistoryByPageReq, query *gor
 	if req.TaskId != nil {
 		query.Where("task_id = ?", *req.TaskId)
 	}
-	if req.JobName != nil {
+	if !util.IsEmpty(req.JobName) {
 		query.Where("job_name like ?", "%"+*req.JobName+"%")
 	}
 	if req.StartTime != nil {

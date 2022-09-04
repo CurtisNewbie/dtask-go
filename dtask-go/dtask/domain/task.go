@@ -6,6 +6,7 @@ import (
 	"github.com/curtisnewbie/gocommon/config"
 	"github.com/curtisnewbie/gocommon/util"
 	"github.com/curtisnewbie/gocommon/web/dto"
+	"github.com/goccy/go-json"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
@@ -103,7 +104,7 @@ type ListTaskByPageReqWebVo struct {
 }
 
 type TriggerTaskReqVo struct {
-	Id int `json:"id"`
+	Id *int `json:"id"`
 }
 
 // JobKey for manually triggered jobs
@@ -123,7 +124,7 @@ func TriggerTask(user *util.User, req *TriggerTaskReqVo) error {
 
 	util.RequireRole(user, util.ADMIN)
 
-	ta, e := FindTaskAppGroup(req.Id)
+	ta, e := FindTaskAppGroup(*req.Id)
 	if e != nil {
 		return e
 	}
@@ -131,9 +132,13 @@ func TriggerTask(user *util.User, req *TriggerTaskReqVo) error {
 	// push the TriggeredJobKey into redis list, let the master poll and execute it
 	tjk := TriggeredJobKey{Name: strconv.Itoa(*ta.Id), Group: *ta.AppGroup, TriggerBy: user.Username}
 	key := _buildTriggeredJobListKey(*ta.AppGroup)
-	log.Infof("Triggering task, key: %v, TriggeredJobKey: %v", key, tjk)
+	log.Infof("Triggering task, key: %v, TriggeredJobKey: %+v", key, tjk)
 
-	cmd := config.GetRedis().LPush(key, tjk)
+	val, e := json.Marshal(tjk)
+	if e != nil {
+		return e
+	}
+	cmd := config.GetRedis().LPush(key, string(val))
 	if e := cmd.Err(); e != nil {
 		return e
 	}
@@ -144,7 +149,7 @@ func TriggerTask(user *util.User, req *TriggerTaskReqVo) error {
 func FindTaskAppGroup(id int) (*TaskIdAppGroup, error) {
 	var ta TaskIdAppGroup
 	tx := config.GetDB().Raw("select id, app_group from task where id = ?", id).Scan(&ta)
-	if tx.Error == nil {
+	if tx.Error != nil {
 		return nil, tx.Error
 	}
 	return &ta, nil
