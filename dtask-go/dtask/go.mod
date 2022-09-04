@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/curtisnewbie/gocommon v0.0.0-20220904081459-f39dc92089f2
 	github.com/gin-gonic/gin v1.8.1
+	github.com/sirupsen/logrus v1.9.0
 	gorm.io/gorm v1.23.8
 )
 
@@ -25,7 +26,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.1 // indirect
-	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
 	golang.org/x/net v0.0.0-20210428140749-89ef3d95e781 // indirect
