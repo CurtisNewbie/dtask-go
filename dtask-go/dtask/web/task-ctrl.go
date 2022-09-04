@@ -61,6 +61,17 @@ func UpdateTaskEndpoint(c *gin.Context) {
 	util.DispatchOk(c)
 }
 
+// Trigger a task
 func TriggerTaskEndpoint(c *gin.Context) {
-	// todo
+	user := util.RequireUser(c)
+
+	var req domain.TriggerTaskReqVo
+	util.MustBindJson(c, &req)
+
+	e := domain.TriggerTask(user, &req)
+	if e != nil {
+		util.DispatchErrJson(c, e)
+		return
+	}
+	util.DispatchOk(c)
 }

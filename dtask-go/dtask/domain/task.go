@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"strconv"
+
 	"github.com/curtisnewbie/gocommon/config"
 	"github.com/curtisnewbie/gocommon/util"
 	"github.com/curtisnewbie/gocommon/web/dto"
@@ -99,6 +101,51 @@ type ListTaskByPageReqWebVo struct {
 	Enabled *TaskEnabled `json:"enabled"`
 }
 
+type TriggerTaskReqVo struct {
+	Id int `json:"id"`
+}
+
+// JobKey for manually triggered jobs
+type TriggeredJobKey struct {
+	Name      string
+	Group     string
+	TriggerBy string
+}
+
+type TaskIdAppGroup struct {
+	Id       *int
+	AppGroup *string
+}
+
+// Trigger a task
+func TriggerTask(user *util.User, req *TriggerTaskReqVo) error {
+
+	util.RequireRole(user, util.ADMIN)
+
+	ta, e := FindTaskAppGroup(req.Id)
+	if e != nil {
+		return e
+	}
+
+	// push the TriggeredJobKey into redis list, let the master poll and execute it
+	tjk := TriggeredJobKey{Name: strconv.Itoa(*ta.Id), Group: *ta.AppGroup, TriggerBy: user.Username}
+	cmd := config.GetRedis().LPush(_buildTriggeredJobListKey(*ta.AppGroup), tjk)
+	if e := cmd.Err(); e != nil {
+		return e
+	}
+
+	return nil
+}
+
+func FindTaskAppGroup(id int) (*TaskIdAppGroup, error) {
+	var ta TaskIdAppGroup
+	tx := config.GetDB().Raw("select id, app_group from task where id = ?", id).Scan(&ta)
+	if tx.Error == nil {
+		return nil, tx.Error
+	}
+	return &ta, nil
+}
+
 // Update task
 func UpdateTask(user *util.User, req *UpdateTaskReq) error {
 
@@ -174,4 +221,9 @@ func _addWhereForListTaskByPage(req *ListTaskByPageReqWebVo, query *gorm.DB) *go
 		query.Where("enabled = ?", *req.Enabled)
 	}
 	return query
+}
+
+// Build Redis's key for list of manually triggered job
+func _buildTriggeredJobListKey(appGroup string) string {
+	return "task:trigger:group:" + appGroup
 }
