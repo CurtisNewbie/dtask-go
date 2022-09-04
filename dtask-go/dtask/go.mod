@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/curtisnewbie/gocommon v0.0.0-20220904095108-9d46bd108df9
 	github.com/gin-gonic/gin v1.8.1
+	github.com/goccy/go-json v0.9.7
 	github.com/sirupsen/logrus v1.9.0
 	gorm.io/gorm v1.23.8
 )
@@ -16,7 +17,6 @@ require (
 	github.com/go-playground/validator/v10 v10.10.0 // indirect
 	github.com/go-redis/redis v6.15.9+incompatible // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
-	github.com/goccy/go-json v0.9.7 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect

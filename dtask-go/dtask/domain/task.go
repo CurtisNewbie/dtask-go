@@ -1,12 +1,12 @@
 package domain
 
 import (
+	"encoding/json"
 	"strconv"
 
 	"github.com/curtisnewbie/gocommon/config"
 	"github.com/curtisnewbie/gocommon/util"
 	"github.com/curtisnewbie/gocommon/web/dto"
-	"github.com/goccy/go-json"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
