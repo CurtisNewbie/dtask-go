@@ -12,25 +12,25 @@ import (
 type TaskHistoryWebVo struct {
 
 	/** id */
-	id int
+	Id int
 
 	/** job name */
-	jobName *string
+	JobName *string `json:"jobName"`
 
 	/** task's id */
-	taskId *int
+	TaskId *int `json:"taskId"`
 
 	/** start time */
-	startTime *dto.WTime
+	StartTime *dto.WTime `json:"startTime"`
 
 	/** end time */
-	endTime *dto.WTime
+	EndTime *dto.WTime `json:"endTime"`
 
 	/** task triggered by */
-	runBy *string
+	RunBy *string `json:"runBy"`
 
 	/** result of last execution */
-	runResult *string
+	RunResult *string `json:"runResult"`
 }
 
 type ListTaskHistoryByPageResp struct {
@@ -62,6 +62,10 @@ type ListTaskHistoryByPageReq struct {
 func ListTaskHistoryByPage(user *util.User, req *ListTaskHistoryByPageReq) (*ListTaskHistoryByPageResp, error) {
 
 	util.RequireRole(user, util.ADMIN)
+
+	if req.Paging == nil {
+		req.Paging = &dto.Paging{Limit: 30, Page: 1}
+	}
 
 	var histories []TaskHistoryWebVo
 	selectq := config.GetDB().Limit(req.Paging.Limit).Offset(dto.CalcOffset(req.Paging))

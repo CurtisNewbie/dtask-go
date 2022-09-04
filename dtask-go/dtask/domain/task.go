@@ -60,10 +60,10 @@ type TaskWebVo struct {
 	AppGroup string `json:"appGroup"`
 
 	/** the last time this task was executed */
-	LastRunStartTime dto.WTime `json:"lastRunStartTime"`
+	LastRunStartTime *dto.WTime `json:"lastRunStartTime"`
 
 	/** the last time this task was finished */
-	LastRunEndTime dto.WTime `json:"lastRunEndTime"`
+	LastRunEndTime *dto.WTime `json:"lastRunEndTime"`
 
 	/** app that previously ran this task */
 	LastRunBy string `json:"lastRunBy"`
@@ -78,7 +78,7 @@ type TaskWebVo struct {
 	ConcurrentEnabled TaskConcurrentEnabled `json:"concurrentEnabled"`
 
 	/** update date */
-	UpdateDate dto.WTime `json:"updateDate"`
+	UpdateDate *dto.WTime `json:"updateDate"`
 
 	/** updated by */
 	UpdateBy string `json:"updateBy"`
@@ -191,8 +191,12 @@ func ListTaskByPage(user *util.User, req *ListTaskByPageReqWebVo) (*ListTaskByPa
 
 	util.RequireRole(user, util.ADMIN)
 
+	if req.Paging == nil {
+		req.Paging = &dto.Paging{Limit: 30, Page: 1}
+	}
+
 	var tasks []TaskWebVo
-	selectq := config.GetDB().Limit(req.Paging.Limit).Offset(dto.CalcOffset(req.Paging))
+	selectq := config.GetDB().Table("task").Limit(req.Paging.Limit).Offset(dto.CalcOffset(req.Paging))
 	_addWhereForListTaskByPage(req, selectq)
 
 	tx := selectq.Scan(&tasks)
@@ -203,7 +207,7 @@ func ListTaskByPage(user *util.User, req *ListTaskByPageReqWebVo) (*ListTaskByPa
 		tasks = []TaskWebVo{}
 	}
 
-	countq := config.GetDB().Select("COUNT(*)")
+	countq := config.GetDB().Table("task").Select("COUNT(*)")
 	_addWhereForListTaskByPage(req, countq)
 	var total int
 	tx = countq.Scan(&total)
@@ -215,10 +219,10 @@ func ListTaskByPage(user *util.User, req *ListTaskByPageReqWebVo) (*ListTaskByPa
 }
 
 func _addWhereForListTaskByPage(req *ListTaskByPageReqWebVo, query *gorm.DB) *gorm.DB {
-	if req.JobName != nil {
+	if !util.IsEmpty(req.JobName) {
 		query.Where("job_name like ?", "%"+*req.JobName+"%")
 	}
-	if req.AppGroup != nil {
+	if !util.IsEmpty(req.AppGroup) {
 		query.Where("app_group = ?", *req.AppGroup)
 	}
 	if req.Enabled != nil {
