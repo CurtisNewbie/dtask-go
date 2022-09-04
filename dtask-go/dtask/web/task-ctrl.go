@@ -3,7 +3,6 @@ package web
 import (
 	"github.com/curtisnewbie/dtask/domain"
 	"github.com/curtisnewbie/gocommon/util"
-	"github.com/curtisnewbie/gocommon/web/dto"
 	"github.com/curtisnewbie/gocommon/web/server"
 	"github.com/gin-gonic/gin"
 )
@@ -17,29 +16,34 @@ func RegisterTaskRoutes(router *gin.Engine) {
 	router.POST(server.ResolvePath("/dtask/task/trigger", true), TriggerTaskEndpoint)
 }
 
+// List tasks
 func ListTaskByPageEndpoint(c *gin.Context) {
-	user, e := util.ExtractUser(c)
+	user := util.RequireUser(c)
+
+	var req domain.ListTaskByPageReqWebVo
+	util.MustBindJson(c, &req)
+
+	r, e := domain.ListTaskByPage(user, &req)
 	if e != nil {
 		util.DispatchErrJson(c, e)
 		return
 	}
+	util.DispatchJson(c, r)
+}
 
-	var req domain.ListTaskByPageReqWebVo
-	if e := c.ShouldBindJSON(&req); e != nil {
-		util.DispatchJson(c, dto.ErrorResp("Illegal Arguments"))
-		return
-	}
+// List task histories
+func listTaskHistoryByPageEndpoint(c *gin.Context) {
+	user := util.RequireUser(c)
 
-	if _, e := domain.ListTaskByPage(user, &req); e != nil {
+	var req domain.ListTaskHistoryByPageReq
+	util.MustBindJson(c, &req)
+
+	r, e := domain.ListTaskHistoryByPage(user, &req)
+	if e != nil {
 		util.DispatchErrJson(c, e)
 		return
 	}
-
-	util.DispatchOk(c)
-}
-
-func listTaskHistoryByPageEndpoint(c *gin.Context) {
-	// todo
+	util.DispatchJson(c, r)
 }
 
 func UpdateTaskEndpoint(c *gin.Context) {
