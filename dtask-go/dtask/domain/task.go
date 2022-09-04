@@ -6,6 +6,7 @@ import (
 	"github.com/curtisnewbie/gocommon/config"
 	"github.com/curtisnewbie/gocommon/util"
 	"github.com/curtisnewbie/gocommon/web/dto"
+	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -129,7 +130,10 @@ func TriggerTask(user *util.User, req *TriggerTaskReqVo) error {
 
 	// push the TriggeredJobKey into redis list, let the master poll and execute it
 	tjk := TriggeredJobKey{Name: strconv.Itoa(*ta.Id), Group: *ta.AppGroup, TriggerBy: user.Username}
-	cmd := config.GetRedis().LPush(_buildTriggeredJobListKey(*ta.AppGroup), tjk)
+	key := _buildTriggeredJobListKey(*ta.AppGroup)
+	log.Infof("Triggering task, key: %v, TriggeredJobKey: %v", key, tjk)
+
+	cmd := config.GetRedis().LPush(key, tjk)
 	if e := cmd.Err(); e != nil {
 		return e
 	}
