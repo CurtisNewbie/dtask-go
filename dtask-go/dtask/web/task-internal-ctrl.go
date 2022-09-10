@@ -29,7 +29,7 @@ func ListAllTaskRpc(c *gin.Context) {
 	if e != nil {
 		panic(e)
 	}
-	util.DispatchJson(c, r)
+	util.DispatchOkWData(c, r)
 }
 
 /*

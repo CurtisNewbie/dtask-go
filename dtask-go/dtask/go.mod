@@ -3,7 +3,7 @@ module github.com/curtisnewbie/dtask
 go 1.18
 
 require (
-	github.com/curtisnewbie/gocommon v0.0.0-20220910131150-bd30203f7e85
+	github.com/curtisnewbie/gocommon v0.0.0-20220910162037-6ddcc7396d49
 	github.com/gin-gonic/gin v1.8.1
 	github.com/sirupsen/logrus v1.9.0
 	gorm.io/gorm v1.23.8

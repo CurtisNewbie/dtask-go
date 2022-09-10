@@ -77,6 +77,7 @@ type RecordTaskHistoryReq struct {
 }
 
 func RecordTaskHistory(req *RecordTaskHistoryReq) error {
+
 	db := config.GetDB().Table("task_history")
 	m := make(map[string]any)
 

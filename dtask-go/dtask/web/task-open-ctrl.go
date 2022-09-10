@@ -26,7 +26,7 @@ func ListTaskByPageEndpoint(c *gin.Context) {
 	if e != nil {
 		panic(e)
 	}
-	util.DispatchJson(c, r)
+	util.DispatchOkWData(c, r)
 }
 
 // List task histories
@@ -40,7 +40,7 @@ func ListTaskHistoryByPageEndpoint(c *gin.Context) {
 	if e != nil {
 		panic(e)
 	}
-	util.DispatchJson(c, r)
+	util.DispatchOkWData(c, r)
 }
 
 // Update task info

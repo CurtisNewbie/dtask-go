@@ -15,6 +15,12 @@ github.com/curtisnewbie/gocommon v0.0.0-20220910100624-1f1e8ae717ae h1:JlSHXw5kg
 github.com/curtisnewbie/gocommon v0.0.0-20220910100624-1f1e8ae717ae/go.mod h1:Kgt1FtJsqAfJFZe9ivQDOfHNOpKMhzJWrFcDTRN0+d4=
 github.com/curtisnewbie/gocommon v0.0.0-20220910131150-bd30203f7e85 h1:Dh9lBoXpPeRxXe+X6OHPpY5IxMGCJGO4BYTrkwB0J1M=
 github.com/curtisnewbie/gocommon v0.0.0-20220910131150-bd30203f7e85/go.mod h1:Kgt1FtJsqAfJFZe9ivQDOfHNOpKMhzJWrFcDTRN0+d4=
+github.com/curtisnewbie/gocommon v0.0.0-20220910141013-455d38efbac9 h1:6eCWor4xmMgCh+GcMA+Xv8aJVnnR0PJlDuU4cz5pir0=
+github.com/curtisnewbie/gocommon v0.0.0-20220910141013-455d38efbac9/go.mod h1:Kgt1FtJsqAfJFZe9ivQDOfHNOpKMhzJWrFcDTRN0+d4=
+github.com/curtisnewbie/gocommon v0.0.0-20220910142730-03e497bf36b2 h1:Bq9ud8ubXK6TJRI5M9/ST7nX8lj5eGGkoMxE65R4WiE=
+github.com/curtisnewbie/gocommon v0.0.0-20220910142730-03e497bf36b2/go.mod h1:Kgt1FtJsqAfJFZe9ivQDOfHNOpKMhzJWrFcDTRN0+d4=
+github.com/curtisnewbie/gocommon v0.0.0-20220910162037-6ddcc7396d49 h1:AU+5GePb38sPorrPCDsACXYBdcclRctboBJUwu6n32o=
+github.com/curtisnewbie/gocommon v0.0.0-20220910162037-6ddcc7396d49/go.mod h1:Kgt1FtJsqAfJFZe9ivQDOfHNOpKMhzJWrFcDTRN0+d4=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

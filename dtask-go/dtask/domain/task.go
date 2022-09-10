@@ -63,10 +63,10 @@ type TaskWebVo struct {
 	AppGroup string `json:"appGroup"`
 
 	/** the last time this task was executed */
-	LastRunStartTime *dto.WTime `json:"lastRunStartTime"`
+	LastRunStartTime *dto.TTime `json:"lastRunStartTime"`
 
 	/** the last time this task was finished */
-	LastRunEndTime *dto.WTime `json:"lastRunEndTime"`
+	LastRunEndTime *dto.TTime `json:"lastRunEndTime"`
 
 	/** app that previously ran this task */
 	LastRunBy string `json:"lastRunBy"`
@@ -81,7 +81,7 @@ type TaskWebVo struct {
 	ConcurrentEnabled TaskConcurrentEnabled `json:"concurrentEnabled"`
 
 	/** update date */
-	UpdateDate *dto.WTime `json:"updateDate"`
+	UpdateDate *dto.TTime `json:"updateDate"`
 
 	/** updated by */
 	UpdateBy string `json:"updateBy"`
@@ -156,9 +156,10 @@ type DisableTaskReqVo struct {
 
 func DisableTask(req *DisableTaskReqVo) error {
 	qry := config.GetDB()
-	qry = qry.Debug().Table("task").Where("id = ?", req.Id)
+	qry = qry.Table("task").Where("id = ?", req.Id)
 
 	umap := make(map[string]any)
+	umap["enabled"] = 0
 	umap["last_run_result"] = req.LastRunResult
 	umap["update_by"] = req.UpdateBy
 	umap["update_date"] = time.Time(req.UpdateDate)
@@ -172,9 +173,7 @@ func DisableTask(req *DisableTaskReqVo) error {
 
 func IsEnabledTask(taskId *int) error {
 	var id int
-	tx := config.GetDB().Raw("select id from task where id = ? and enabled = 1", *taskId).Scan(&id)
-
-	if tx.Error != nil {
+	if tx := config.GetDB().Raw("select id from task where id = ? and enabled = 1", *taskId).Scan(&id); tx.Error != nil {
 		return tx.Error
 	}
 
