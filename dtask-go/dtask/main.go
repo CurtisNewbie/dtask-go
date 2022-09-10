@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -15,7 +14,7 @@ func main() {
 	profile := config.ParseProfile(os.Args[1:])
 	log.Printf("Using profile: %v", profile)
 
-	conf, err := config.ParseJsonConfig(fmt.Sprintf("app-conf-%v.json", profile))
+	conf, err := config.ParseJsonConfig(config.ParseConfigFilePath(os.Args[1:], profile))
 	if err != nil {
 		panic(err)
 	}
@@ -30,8 +29,10 @@ func main() {
 
 	// bootstrap web server
 	err = server.BootstrapServer(&conf.ServerConf, config.IsProd(profile), func(router *gin.Engine) {
-		web.RegisterTaskRoutes(router)
+		web.RegisterTaskOpenRoutes(router)
+		web.RegisterTaskInternalRoutes(router)
 	})
+
 	if err != nil {
 		panic(err)
 	}

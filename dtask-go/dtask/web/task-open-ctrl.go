@@ -7,13 +7,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Register routes
-func RegisterTaskRoutes(router *gin.Engine) {
-
-	router.POST(server.ResolvePath("/dtask/task/list", true), ListTaskByPageEndpoint)
-	router.POST(server.ResolvePath("/dtask/task/history", true), ListTaskHistoryByPageEndpoint)
-	router.POST(server.ResolvePath("/dtask/task/update", true), UpdateTaskEndpoint)
-	router.POST(server.ResolvePath("/dtask/task/trigger", true), TriggerTaskEndpoint)
+// Register OPEN API routes
+func RegisterTaskOpenRoutes(router *gin.Engine) {
+	router.POST(server.ResolvePath(base, "/task/list", true), ListTaskByPageEndpoint)
+	router.POST(server.ResolvePath(base, "/task/history", true), ListTaskHistoryByPageEndpoint)
+	router.POST(server.ResolvePath(base, "/task/update", true), UpdateTaskEndpoint)
+	router.POST(server.ResolvePath(base, "/task/trigger", true), TriggerTaskEndpoint)
 }
 
 // List tasks
@@ -25,8 +24,7 @@ func ListTaskByPageEndpoint(c *gin.Context) {
 
 	r, e := domain.ListTaskByPage(user, &req)
 	if e != nil {
-		util.DispatchErrJson(c, e)
-		return
+		panic(e)
 	}
 	util.DispatchJson(c, r)
 }
@@ -40,8 +38,7 @@ func ListTaskHistoryByPageEndpoint(c *gin.Context) {
 
 	r, e := domain.ListTaskHistoryByPage(user, &req)
 	if e != nil {
-		util.DispatchErrJson(c, e)
-		return
+		panic(e)
 	}
 	util.DispatchJson(c, r)
 }
@@ -55,8 +52,7 @@ func UpdateTaskEndpoint(c *gin.Context) {
 
 	e := domain.UpdateTask(user, &req)
 	if e != nil {
-		util.DispatchErrJson(c, e)
-		return
+		panic(e)
 	}
 	util.DispatchOk(c)
 }
@@ -70,8 +66,7 @@ func TriggerTaskEndpoint(c *gin.Context) {
 
 	e := domain.TriggerTask(user, &req)
 	if e != nil {
-		util.DispatchErrJson(c, e)
-		return
+		panic(e)
 	}
 	util.DispatchOk(c)
 }

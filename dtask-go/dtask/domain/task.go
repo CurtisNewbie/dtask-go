@@ -3,10 +3,12 @@ package domain
 import (
 	"encoding/json"
 	"strconv"
+	"time"
 
 	"github.com/curtisnewbie/gocommon/config"
 	"github.com/curtisnewbie/gocommon/util"
 	"github.com/curtisnewbie/gocommon/web/dto"
+	"github.com/curtisnewbie/gocommon/weberr"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
@@ -119,6 +121,87 @@ type TaskIdAppGroup struct {
 	AppGroup *string
 }
 
+type UpdateLastRunInfoReq struct {
+
+	/** id */
+	Id int `json:"id"`
+
+	/** the last time this task was executed */
+	LastRunStartTime dto.TTime `json:"lastRunStartTime"`
+
+	/** the last time this task was finished */
+	LastRunEndTime dto.TTime `json:"lastRunEndTime"`
+
+	/** app that previously ran this task */
+	LastRunBy string `json:"lastRunBy"`
+
+	/** result of last execution */
+	LastRunResult string `json:"lastRunResult"`
+}
+
+type DisableTaskReqVo struct {
+
+	/** id */
+	Id int `json:"id"`
+
+	/** result of last execution */
+	LastRunResult string `json:"lastRunResult"`
+
+	/** update date */
+	UpdateDate dto.TTime `json:"updateDate"`
+
+	/** updated by */
+	UpdateBy string `json:"updateBy"`
+}
+
+func DisableTask(req *DisableTaskReqVo) error {
+	qry := config.GetDB()
+	qry = qry.Debug().Table("task").Where("id = ?", req.Id)
+
+	umap := make(map[string]any)
+	umap["last_run_result"] = req.LastRunResult
+	umap["update_by"] = req.UpdateBy
+	umap["update_date"] = time.Time(req.UpdateDate)
+
+	tx := qry.Updates(umap)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	return nil
+}
+
+func IsEnabledTask(taskId *int) error {
+	var id int
+	tx := config.GetDB().Raw("select id from task where id = ? and enabled = 1", *taskId).Scan(&id)
+
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	if id < 1 {
+		return weberr.NewWebErr("Task not found or disabled")
+	}
+	return nil
+}
+
+func UpdateTaskLastRunInfo(req *UpdateLastRunInfoReq) error {
+
+	qry := config.GetDB()
+	qry = qry.Table("task").Where("id = ?", req.Id)
+
+	umap := make(map[string]any)
+	umap["last_run_start_time"] = time.Time(req.LastRunStartTime)
+	umap["last_run_end_time"] = time.Time(req.LastRunEndTime)
+	umap["last_run_by"] = req.LastRunBy
+	umap["last_run_result"] = req.LastRunResult
+
+	tx := qry.Updates(umap)
+	if tx.Error != nil {
+		return tx.Error
+	}
+	return nil
+}
+
 // Trigger a task
 func TriggerTask(user *util.User, req *TriggerTaskReqVo) error {
 
@@ -161,7 +244,7 @@ func UpdateTask(user *util.User, req *UpdateTaskReq) error {
 	util.RequireRole(user, util.ADMIN)
 
 	qry := config.GetDB()
-	qry.Where("id = ?", req.Id)
+	qry = qry.Where("id = ?", req.Id)
 
 	umap := make(map[string]any)
 
@@ -189,6 +272,23 @@ func UpdateTask(user *util.User, req *UpdateTaskReq) error {
 		return tx.Error
 	}
 	return nil
+}
+
+// List all tasks for the appGroup
+func ListAllTasks(appGroup *string) (*[]TaskWebVo, error) {
+
+	var tasks []TaskWebVo
+	selectq := config.GetDB().Table("task").Where("app_group = ?", *appGroup)
+
+	tx := selectq.Scan(&tasks)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+	if tasks == nil {
+		tasks = []TaskWebVo{}
+	}
+
+	return &tasks, nil
 }
 
 // List tasks
@@ -225,13 +325,13 @@ func ListTaskByPage(user *util.User, req *ListTaskByPageReqWebVo) (*ListTaskByPa
 
 func _addWhereForListTaskByPage(req *ListTaskByPageReqWebVo, query *gorm.DB) *gorm.DB {
 	if !util.IsEmpty(req.JobName) {
-		query.Where("job_name like ?", "%"+*req.JobName+"%")
+		*query = *query.Where("job_name like ?", "%"+*req.JobName+"%")
 	}
 	if !util.IsEmpty(req.AppGroup) {
-		query.Where("app_group = ?", *req.AppGroup)
+		*query = *query.Where("app_group = ?", *req.AppGroup)
 	}
 	if req.Enabled != nil {
-		query.Where("enabled = ?", *req.Enabled)
+		*query = *query.Where("enabled = ?", *req.Enabled)
 	}
 	return query
 }
