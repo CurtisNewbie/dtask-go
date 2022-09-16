@@ -1,6 +1,6 @@
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
-github.com/curtisnewbie/gocommon v0.0.0-20220911080852-ed94271b56fa h1:TxrxIW827BfBRwao4/3Z4VueHOjsf/MmF8icVJXRsuY=
-github.com/curtisnewbie/gocommon v0.0.0-20220911080852-ed94271b56fa/go.mod h1:Kgt1FtJsqAfJFZe9ivQDOfHNOpKMhzJWrFcDTRN0+d4=
+github.com/curtisnewbie/gocommon v0.0.0-20220916155250-4a47950b9789 h1:JintEBcqKHmRCxHMvxmbO5dmV5AIvz3UO5iBQHd2ANg=
+github.com/curtisnewbie/gocommon v0.0.0-20220916155250-4a47950b9789/go.mod h1:Kgt1FtJsqAfJFZe9ivQDOfHNOpKMhzJWrFcDTRN0+d4=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

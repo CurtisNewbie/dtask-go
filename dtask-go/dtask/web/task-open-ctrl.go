@@ -9,10 +9,10 @@ import (
 
 // Register OPEN API routes
 func RegisterTaskOpenRoutes(router *gin.Engine) {
-	router.POST(server.ResolvePath(base, "/task/list", true), ListTaskByPageEndpoint)
-	router.POST(server.ResolvePath(base, "/task/history", true), ListTaskHistoryByPageEndpoint)
-	router.POST(server.ResolvePath(base, "/task/update", true), UpdateTaskEndpoint)
-	router.POST(server.ResolvePath(base, "/task/trigger", true), TriggerTaskEndpoint)
+	router.POST(server.ResolvePath("/task/list", true), ListTaskByPageEndpoint)
+	router.POST(server.ResolvePath("/task/history", true), ListTaskHistoryByPageEndpoint)
+	router.POST(server.ResolvePath("/task/update", true), UpdateTaskEndpoint)
+	router.POST(server.ResolvePath("/task/trigger", true), TriggerTaskEndpoint)
 }
 
 // List tasks

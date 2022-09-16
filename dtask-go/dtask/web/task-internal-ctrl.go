@@ -13,11 +13,11 @@ import (
 func RegisterTaskInternalRoutes(router *gin.Engine) {
 
 	// Internal RPC Calls (these should be protected by the gateway)
-	router.GET(server.ResolvePath(base, "/task/all", false), ListAllTaskRpc)
-	router.POST(server.ResolvePath(base, "/task/lastRunInfo/update", false), UpdateTaskLastRunInfoRpc)
-	router.GET(server.ResolvePath(base, "/task/valid", false), ValidTaskRpc)
-	router.POST(server.ResolvePath(base, "/task/disable", false), DisableTaskRpc)
-	router.POST(server.ResolvePath(base, "/task/history", false), RecordTaskHistoryRpc)
+	router.GET(server.ResolvePath("/task/all", false), ListAllTaskRpc)
+	router.POST(server.ResolvePath("/task/lastRunInfo/update", false), UpdateTaskLastRunInfoRpc)
+	router.GET(server.ResolvePath("/task/valid", false), ValidTaskRpc)
+	router.POST(server.ResolvePath("/task/disable", false), DisableTaskRpc)
+	router.POST(server.ResolvePath("/task/history", false), RecordTaskHistoryRpc)
 }
 
 /*

@@ -12,3 +12,8 @@ remote_path="~/services/dtaskgo/build"
 # scp "app-conf-dev.json" "${remote}:${remote_path}"
 
 scp -r dtask/* "${remote}:${remote_path}/"
+if [ ! $? -eq 0 ]; then
+    exit -1
+fi
+
+ssh  "alphaboi@curtisnewbie.com" "cd services; docker-compose up -d --build dtaskgo"
