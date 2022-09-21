@@ -56,6 +56,9 @@ type TaskWebVo struct {
 	/** job's name */
 	JobName string `json:"jobName"`
 
+	/** name of bean that will be executed */
+	TargetBean string `json:"targetBean"`
+
 	/** cron expression */
 	CronExpr string `json:"cronExpr"`
 
@@ -111,9 +114,9 @@ type TriggerTaskReqVo struct {
 
 // JobKey for manually triggered jobs
 type TriggeredJobKey struct {
-	Name      string
-	Group     string
-	TriggerBy string
+	Name      string `json:"name"`
+	Group     string `json:"group"`
+	TriggerBy string `json:"triggerBy"`
 }
 
 type TaskIdAppGroup struct {
@@ -214,13 +217,14 @@ func TriggerTask(user *util.User, req *TriggerTaskReqVo) error {
 	// push the TriggeredJobKey into redis list, let the master poll and execute it
 	tjk := TriggeredJobKey{Name: strconv.Itoa(*ta.Id), Group: *ta.AppGroup, TriggerBy: user.Username}
 	key := _buildTriggeredJobListKey(*ta.AppGroup)
-	log.Infof("Triggering task, key: %v, TriggeredJobKey: %+v", key, tjk)
-
 	val, e := json.Marshal(tjk)
 	if e != nil {
 		return e
 	}
-	cmd := config.GetRedis().LPush(key, string(val))
+	json := string(val)
+	log.Infof("Triggering task, key: %v, TriggeredJobKey: %+v, json: %s", key, tjk, json)
+
+	cmd := config.GetRedis().LPush(key, json)
 	if e := cmd.Err(); e != nil {
 		return e
 	}
@@ -300,7 +304,7 @@ func ListTaskByPage(user *util.User, req *ListTaskByPageReqWebVo) (*ListTaskByPa
 	}
 
 	var tasks []TaskWebVo
-	selectq := config.GetDB().Table("task").Limit(req.Paging.Limit).Offset(dto.CalcOffset(req.Paging))
+	selectq := config.GetDB().Table("task").Limit(req.Paging.Limit).Offset(dto.CalcOffset(req.Paging)).Order("id desc")
 	_addWhereForListTaskByPage(req, selectq)
 
 	tx := selectq.Scan(&tasks)

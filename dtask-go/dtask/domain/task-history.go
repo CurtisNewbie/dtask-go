@@ -105,7 +105,7 @@ func ListTaskHistoryByPage(user *util.User, req *ListTaskHistoryByPageReq) (*Lis
 	}
 
 	var histories []TaskHistoryWebVo
-	selectq := config.GetDB().Table("task_history").Limit(req.Paging.Limit).Offset(dto.CalcOffset(req.Paging))
+	selectq := config.GetDB().Table("task_history").Limit(req.Paging.Limit).Offset(dto.CalcOffset(req.Paging)).Order("id desc")
 	_addWhereForListTaskHistoryByPage(req, selectq)
 
 	tx := selectq.Scan(&histories)
