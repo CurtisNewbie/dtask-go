@@ -13,29 +13,29 @@ import (
 func RegisterTaskInternalRoutes(router *gin.Engine) {
 
 	// Internal RPC Calls (these should be protected by the gateway)
-	router.GET(server.ResolvePath("/task/all", false), ListAllTaskRpc)
-	router.POST(server.ResolvePath("/task/lastRunInfo/update", false), UpdateTaskLastRunInfoRpc)
-	router.GET(server.ResolvePath("/task/valid", false), ValidTaskRpc)
-	router.POST(server.ResolvePath("/task/disable", false), DisableTaskRpc)
-	router.POST(server.ResolvePath("/task/history", false), RecordTaskHistoryRpc)
+	router.GET(server.ResolvePath("/task/all", false), util.BuildRouteHandler(ListAllTaskRpc))
+	router.POST(server.ResolvePath("/task/lastRunInfo/update", false), util.BuildRouteHandler(UpdateTaskLastRunInfoRpc))
+	router.GET(server.ResolvePath("/task/valid", false), util.BuildRouteHandler(ValidTaskRpc))
+	router.POST(server.ResolvePath("/task/disable", false), util.BuildRouteHandler(DisableTaskRpc))
+	router.POST(server.ResolvePath("/task/history", false), util.BuildRouteHandler(RecordTaskHistoryRpc))
 }
 
 /*
-	curl "http://localhost:8082/dtask/remote/task/all?appGroup=file-service"
+	curl "http://localhost:8083/remote/task/all?appGroup=file-service"
 */
-func ListAllTaskRpc(c *gin.Context) {
+func ListAllTaskRpc(c *gin.Context) any {
 	appGroup := c.Query("appGroup")
 	r, e := domain.ListAllTasks(&appGroup)
 	if e != nil {
 		panic(e)
 	}
-	util.DispatchOkWData(c, r)
+	return r
 }
 
 /*
-	curl -X POST http://localhost:8082/dtask/remote/task/lastRunInfo/update -d ' { "id": 1, "lastRunStartTime" : "2022-09-10 15:04:05", "lastRunEndTime" : "2022-09-10 15:04:10", "lastRunBy" : "Yongj Zhuang", "lastRunResult" : "Looks good to me" } '
+	curl -X POST http://localhost:8083/remote/task/lastRunInfo/update -d ' { "id": 1, "lastRunStartTime" : "2022-09-10 15:04:05", "lastRunEndTime" : "2022-09-10 15:04:10", "lastRunBy" : "Yongj Zhuang", "lastRunResult" : "Looks good to me" } '
 */
-func UpdateTaskLastRunInfoRpc(c *gin.Context) {
+func UpdateTaskLastRunInfoRpc(c *gin.Context) any {
 
 	var req domain.UpdateLastRunInfoReq
 	util.MustBindJson(c, &req)
@@ -44,13 +44,14 @@ func UpdateTaskLastRunInfoRpc(c *gin.Context) {
 	if e != nil {
 		panic(e)
 	}
-	util.DispatchOk(c)
+
+	return nil
 }
 
 /*
-	curl "http://localhost:8082/dtask/remote/task/valid?taskId=1"
+	curl "http://localhost:8083/remote/task/valid?taskId=1"
 */
-func ValidTaskRpc(c *gin.Context) {
+func ValidTaskRpc(c *gin.Context) any {
 	taskId := c.Query("taskId")
 	cvtd, e := strconv.Atoi(taskId)
 	if e != nil {
@@ -61,13 +62,13 @@ func ValidTaskRpc(c *gin.Context) {
 	if e != nil {
 		panic(e)
 	}
-	util.DispatchOk(c)
+	return nil
 }
 
 /*
-	curl -X POST http://localhost:8082/dtask/remote/task/disable -d ' { "id": 1, "lastRunResult" : "Something is wrong", "updateBy" : "scheduler", "updateDate" : "2022-09-10 17:04:10" }'
+	curl -X POST http://localhost:8083/remote/task/disable -d ' { "id": 1, "lastRunResult" : "Something is wrong", "updateBy" : "scheduler", "updateDate" : "2022-09-10 17:04:10" }'
 */
-func DisableTaskRpc(c *gin.Context) {
+func DisableTaskRpc(c *gin.Context) any {
 	var req domain.DisableTaskReqVo
 	util.MustBindJson(c, &req)
 
@@ -75,13 +76,13 @@ func DisableTaskRpc(c *gin.Context) {
 	if e != nil {
 		panic(e)
 	}
-	util.DispatchOk(c)
+	return nil
 }
 
 /*
-	curl -X POST http://localhost:8082/dtask/remote/task/history -d ' { "taskId": 1, "runResult" : "Very good", "runBy" : "scheduler", "startTime" : "2022-09-10 17:04:10", "endTime" : "2022-09-10 17:05:10" }'
+	curl -X POST http://localhost:8083/remote/task/history -d ' { "taskId": 1, "runResult" : "Very good", "runBy" : "scheduler", "startTime" : "2022-09-10 17:04:10", "endTime" : "2022-09-10 17:05:10" }'
 */
-func RecordTaskHistoryRpc(c *gin.Context) {
+func RecordTaskHistoryRpc(c *gin.Context) any {
 
 	var req domain.RecordTaskHistoryReq
 	util.MustBindJson(c, &req)
@@ -90,5 +91,5 @@ func RecordTaskHistoryRpc(c *gin.Context) {
 		panic(e)
 	}
 
-	util.DispatchOk(c)
+	return nil
 }

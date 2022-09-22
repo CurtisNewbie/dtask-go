@@ -9,16 +9,14 @@ import (
 
 // Register OPEN API routes
 func RegisterTaskOpenRoutes(router *gin.Engine) {
-	router.POST(server.ResolvePath("/task/list", true), ListTaskByPageEndpoint)
-	router.POST(server.ResolvePath("/task/history", true), ListTaskHistoryByPageEndpoint)
-	router.POST(server.ResolvePath("/task/update", true), UpdateTaskEndpoint)
-	router.POST(server.ResolvePath("/task/trigger", true), TriggerTaskEndpoint)
+	router.POST(server.ResolvePath("/task/list", true), util.BuildAuthRouteHandler(ListTaskByPageEndpoint))
+	router.POST(server.ResolvePath("/task/history", true), util.BuildAuthRouteHandler(ListTaskHistoryByPageEndpoint))
+	router.POST(server.ResolvePath("/task/update", true), util.BuildAuthRouteHandler(UpdateTaskEndpoint))
+	router.POST(server.ResolvePath("/task/trigger", true), util.BuildAuthRouteHandler(TriggerTaskEndpoint))
 }
 
 // List tasks
-func ListTaskByPageEndpoint(c *gin.Context) {
-	user := util.RequireUser(c)
-
+func ListTaskByPageEndpoint(c *gin.Context, user *util.User) any {
 	var req domain.ListTaskByPageReqWebVo
 	util.MustBindJson(c, &req)
 
@@ -26,12 +24,11 @@ func ListTaskByPageEndpoint(c *gin.Context) {
 	if e != nil {
 		panic(e)
 	}
-	util.DispatchOkWData(c, r)
+	return r
 }
 
 // List task histories
-func ListTaskHistoryByPageEndpoint(c *gin.Context) {
-	user := util.RequireUser(c)
+func ListTaskHistoryByPageEndpoint(c *gin.Context, user *util.User) any {
 
 	var req domain.ListTaskHistoryByPageReq
 	util.MustBindJson(c, &req)
@@ -40,12 +37,11 @@ func ListTaskHistoryByPageEndpoint(c *gin.Context) {
 	if e != nil {
 		panic(e)
 	}
-	util.DispatchOkWData(c, r)
+	return r
 }
 
 // Update task info
-func UpdateTaskEndpoint(c *gin.Context) {
-	user := util.RequireUser(c)
+func UpdateTaskEndpoint(c *gin.Context, user *util.User) any {
 
 	var req domain.UpdateTaskReq
 	util.MustBindJson(c, &req)
@@ -54,12 +50,11 @@ func UpdateTaskEndpoint(c *gin.Context) {
 	if e != nil {
 		panic(e)
 	}
-	util.DispatchOk(c)
+	return nil
 }
 
 // Trigger a task
-func TriggerTaskEndpoint(c *gin.Context) {
-	user := util.RequireUser(c)
+func TriggerTaskEndpoint(c *gin.Context, user *util.User) any {
 
 	var req domain.TriggerTaskReqVo
 	util.MustBindJson(c, &req)
@@ -68,5 +63,5 @@ func TriggerTaskEndpoint(c *gin.Context) {
 	if e != nil {
 		panic(e)
 	}
-	util.DispatchOk(c)
+	return nil
 }

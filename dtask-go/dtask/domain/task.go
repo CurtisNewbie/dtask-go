@@ -127,19 +127,19 @@ type TaskIdAppGroup struct {
 type UpdateLastRunInfoReq struct {
 
 	/** id */
-	Id int `json:"id"`
+	Id *int `json:"id"`
 
 	/** the last time this task was executed */
-	LastRunStartTime dto.TTime `json:"lastRunStartTime"`
+	LastRunStartTime *dto.TTime `json:"lastRunStartTime"`
 
 	/** the last time this task was finished */
-	LastRunEndTime dto.TTime `json:"lastRunEndTime"`
+	LastRunEndTime *dto.TTime `json:"lastRunEndTime"`
 
 	/** app that previously ran this task */
-	LastRunBy string `json:"lastRunBy"`
+	LastRunBy *string `json:"lastRunBy"`
 
 	/** result of last execution */
-	LastRunResult string `json:"lastRunResult"`
+	LastRunResult *string `json:"lastRunResult"`
 }
 
 type DisableTaskReqVo struct {
@@ -187,17 +187,30 @@ func IsEnabledTask(taskId *int) error {
 }
 
 func UpdateTaskLastRunInfo(req *UpdateLastRunInfoReq) error {
+	log.Infof("Received: %+v", req)
+	if req.Id == nil {
+		panic("id is required")
+	}
+	if req.LastRunBy == nil {
+		panic("lastRunBy is required")
+	}
+	if req.LastRunStartTime == nil {
+		panic("lastRunStartTime is required")
+	}
+	if req.LastRunEndTime == nil {
+		panic("lastRunEndTime is required")
+	}
 
 	qry := config.GetDB()
 	qry = qry.Table("task").Where("id = ?", req.Id)
 
 	umap := make(map[string]any)
-	umap["last_run_start_time"] = time.Time(req.LastRunStartTime)
-	umap["last_run_end_time"] = time.Time(req.LastRunEndTime)
+	umap["last_run_start_time"] = time.Time(*req.LastRunStartTime)
+	umap["last_run_end_time"] = time.Time(*req.LastRunEndTime)
 	umap["last_run_by"] = req.LastRunBy
 	umap["last_run_result"] = req.LastRunResult
 
-	tx := qry.Updates(umap)
+	tx := qry.Debug().Updates(umap)
 	if tx.Error != nil {
 		return tx.Error
 	}
