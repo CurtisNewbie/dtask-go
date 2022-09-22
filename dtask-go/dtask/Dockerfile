@@ -11,9 +11,8 @@ RUN go env -w GOPROXY=https://mirrors.aliyun.com/goproxy/,direct
 # dependencies
 COPY go.mod .
 COPY go.sum .
-# RUN go mod download
 
-RUN go mod tidy 
+RUN go mod download
 
 # build executable
 COPY . .
