@@ -1,9 +1,6 @@
 package main
 
 import (
-	"log"
-	"os"
-
 	"github.com/curtisnewbie/dtask/web"
 	"github.com/curtisnewbie/gocommon/config"
 	"github.com/curtisnewbie/gocommon/web/server"
@@ -11,14 +8,7 @@ import (
 )
 
 func main() {
-	profile := config.ParseProfile(os.Args[1:])
-	log.Printf("Using profile: %v", profile)
-
-	conf, err := config.ParseJsonConfig(config.ParseConfigFilePath(os.Args[1:], profile))
-	if err != nil {
-		panic(err)
-	}
-	config.SetGlobalConfig(conf)
+	profile, conf := config.DefaultParseProfConf()
 
 	// init handle for database
 	if err := config.InitDBFromConfig(&conf.DBConf); err != nil {
@@ -28,7 +18,7 @@ func main() {
 	config.InitRedisFromConfig(&conf.RedisConf)
 
 	// bootstrap web server
-	err = server.BootstrapServer(&conf.ServerConf, config.IsProd(profile), func(router *gin.Engine) {
+	err := server.BootstrapServer(&conf.ServerConf, config.IsProd(profile), func(router *gin.Engine) {
 		web.RegisterTaskOpenRoutes(router)
 		web.RegisterTaskInternalRoutes(router)
 	})
