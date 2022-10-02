@@ -323,7 +323,7 @@ func ListTaskByPage(user *util.User, req *ListTaskByPageReqWebVo) (*ListTaskByPa
 		Table("task").
 		Limit(req.Paging.Limit).
 		Offset(dto.CalcOffset(req.Paging)).
-		Order("id desc")
+		Order("app_group, id desc")
 
 	_addWhereForListTaskByPage(req, selectq)
 
