@@ -355,7 +355,7 @@ func _addWhereForListTaskByPage(req *ListTaskByPageReqWebVo, query *gorm.DB) *go
 		*query = *query.Where("job_name like ?", "%"+*req.JobName+"%")
 	}
 	if !util.IsEmpty(req.AppGroup) {
-		*query = *query.Where("app_group = ?", *req.AppGroup)
+		*query = *query.Where("app_group like ?", "%"+*req.AppGroup+"%")
 	}
 	if req.Enabled != nil {
 		*query = *query.Where("enabled = ?", *req.Enabled)
