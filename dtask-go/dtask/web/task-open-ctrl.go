@@ -9,59 +9,30 @@ import (
 
 // Register OPEN API routes
 func RegisterTaskOpenRoutes(router *gin.Engine) {
-	router.POST(server.ResolvePath("/task/list", true), util.BuildAuthRouteHandler(ListTaskByPageEndpoint))
-	router.POST(server.ResolvePath("/task/history", true), util.BuildAuthRouteHandler(ListTaskHistoryByPageEndpoint))
-	router.POST(server.ResolvePath("/task/update", true), util.BuildAuthRouteHandler(UpdateTaskEndpoint))
-	router.POST(server.ResolvePath("/task/trigger", true), util.BuildAuthRouteHandler(TriggerTaskEndpoint))
+	router.POST(server.ResolvePath("/task/list", true), util.BuildAuthJRouteHandler(ListTaskByPageEndpoint))
+	router.POST(server.ResolvePath("/task/history", true), util.BuildAuthJRouteHandler(ListTaskHistoryByPageEndpoint))
+	router.POST(server.ResolvePath("/task/update", true), util.BuildAuthJRouteHandler(UpdateTaskEndpoint))
+	router.POST(server.ResolvePath("/task/trigger", true), util.BuildAuthJRouteHandler(TriggerTaskEndpoint))
 }
 
 // List tasks
-func ListTaskByPageEndpoint(c *gin.Context, user *util.User) any {
-	var req domain.ListTaskByPageReqWebVo
-	util.MustBindJson(c, &req)
-
-	r, e := domain.ListTaskByPage(user, &req)
-	if e != nil {
-		panic(e)
-	}
-	return r
+func ListTaskByPageEndpoint(c *gin.Context, user *util.User, req *domain.ListTaskByPageReqWebVo) (any, error) {
+	return domain.ListTaskByPage(user, req)
 }
 
 // List task histories
-func ListTaskHistoryByPageEndpoint(c *gin.Context, user *util.User) any {
-
-	var req domain.ListTaskHistoryByPageReq
-	util.MustBindJson(c, &req)
-
-	r, e := domain.ListTaskHistoryByPage(user, &req)
-	if e != nil {
-		panic(e)
-	}
-	return r
+func ListTaskHistoryByPageEndpoint(c *gin.Context, user *util.User, req *domain.ListTaskHistoryByPageReq) (any, error) {
+	return domain.ListTaskHistoryByPage(user, req)
 }
 
 // Update task info
-func UpdateTaskEndpoint(c *gin.Context, user *util.User) any {
-
-	var req domain.UpdateTaskReq
-	util.MustBindJson(c, &req)
-
-	e := domain.UpdateTask(user, &req)
-	if e != nil {
-		panic(e)
-	}
-	return nil
+func UpdateTaskEndpoint(c *gin.Context, user *util.User, req *domain.UpdateTaskReq) (any, error) {
+	e := domain.UpdateTask(user, req)
+	return nil, e
 }
 
 // Trigger a task
-func TriggerTaskEndpoint(c *gin.Context, user *util.User) any {
-
-	var req domain.TriggerTaskReqVo
-	util.MustBindJson(c, &req)
-
-	e := domain.TriggerTask(user, &req)
-	if e != nil {
-		panic(e)
-	}
-	return nil
+func TriggerTaskEndpoint(c *gin.Context, user *util.User, req *domain.TriggerTaskReqVo) (any, error) {
+	e := domain.TriggerTask(user, req)
+	return nil, e
 }

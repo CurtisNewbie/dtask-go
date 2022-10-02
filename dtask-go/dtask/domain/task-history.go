@@ -105,7 +105,15 @@ func ListTaskHistoryByPage(user *util.User, req *ListTaskHistoryByPageReq) (*Lis
 	}
 
 	var histories []TaskHistoryWebVo
-	selectq := config.GetDB().Table("task_history").Limit(req.Paging.Limit).Offset(dto.CalcOffset(req.Paging)).Order("id desc")
+	selectq := config.GetDB().
+		Table("task_history th").
+		Select("th.id, t.job_name, th.task_id, th.start_time, th.end_time, th.run_by, th.run_result").
+		Joins("LEFT JOIN task t ON th.task_id = t.id").
+		Offset(dto.CalcOffset(req.Paging)).
+		Limit(req.Paging.Limit).
+		Order("th.id DESC")
+
+	// dynamic where conditions
 	_addWhereForListTaskHistoryByPage(req, selectq)
 
 	tx := selectq.Scan(&histories)
@@ -116,8 +124,14 @@ func ListTaskHistoryByPage(user *util.User, req *ListTaskHistoryByPageReq) (*Lis
 		histories = []TaskHistoryWebVo{}
 	}
 
-	countq := config.GetDB().Table("task_history").Select("COUNT(*)")
+	countq := config.GetDB().
+		Table("task_history th").
+		Select("count(th.id)").
+		Joins("LEFT JOIN task t ON th.task_id = t.id")
+
+	// dynamic where conditions
 	_addWhereForListTaskHistoryByPage(req, countq)
+
 	var total int
 	tx = countq.Scan(&total)
 	if tx.Error != nil {
@@ -129,16 +143,16 @@ func ListTaskHistoryByPage(user *util.User, req *ListTaskHistoryByPageReq) (*Lis
 
 func _addWhereForListTaskHistoryByPage(req *ListTaskHistoryByPageReq, query *gorm.DB) *gorm.DB {
 	if req.TaskId != nil {
-		*query = *query.Where("task_id = ?", *req.TaskId)
+		*query = *query.Where("th.task_id = ?", *req.TaskId)
 	}
 	if !util.IsEmpty(req.JobName) {
-		*query = *query.Where("job_name like ?", "%"+*req.JobName+"%")
+		*query = *query.Where("t.job_name like ?", "%"+*req.JobName+"%")
 	}
 	if req.StartTime != nil {
-		*query = *query.Where("start_time >= ?", *req.StartTime)
+		*query = *query.Where("th.start_time >= ?", *req.StartTime)
 	}
 	if req.EndTime != nil {
-		*query = *query.Where("end_time <= ?", *req.EndTime)
+		*query = *query.Where("th.end_time <= ?", *req.EndTime)
 	}
 	return query
 }

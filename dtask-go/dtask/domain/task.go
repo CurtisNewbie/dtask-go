@@ -317,7 +317,12 @@ func ListTaskByPage(user *util.User, req *ListTaskByPageReqWebVo) (*ListTaskByPa
 	}
 
 	var tasks []TaskWebVo
-	selectq := config.GetDB().Table("task").Limit(req.Paging.Limit).Offset(dto.CalcOffset(req.Paging)).Order("id desc")
+	selectq := config.GetDB().
+		Table("task").
+		Limit(req.Paging.Limit).
+		Offset(dto.CalcOffset(req.Paging)).
+		Order("id desc")
+
 	_addWhereForListTaskByPage(req, selectq)
 
 	tx := selectq.Scan(&tasks)
@@ -328,8 +333,12 @@ func ListTaskByPage(user *util.User, req *ListTaskByPageReqWebVo) (*ListTaskByPa
 		tasks = []TaskWebVo{}
 	}
 
-	countq := config.GetDB().Table("task").Select("COUNT(*)")
+	countq := config.GetDB().
+		Table("task").
+		Select("COUNT(*)")
+
 	_addWhereForListTaskByPage(req, countq)
+
 	var total int
 	tx = countq.Scan(&total)
 	if tx.Error != nil {
