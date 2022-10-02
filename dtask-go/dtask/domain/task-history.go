@@ -149,10 +149,14 @@ func _addWhereForListTaskHistoryByPage(req *ListTaskHistoryByPageReq, query *gor
 		*query = *query.Where("t.job_name like ?", "%"+*req.JobName+"%")
 	}
 	if req.StartTime != nil {
-		*query = *query.Where("th.start_time >= ?", *req.StartTime)
+		t := time.Time(*req.StartTime)
+		t = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+		*query = *query.Where("th.start_time >= ?", t)
 	}
 	if req.EndTime != nil {
-		*query = *query.Where("th.end_time <= ?", *req.EndTime)
+		t := time.Time(*req.EndTime)
+		t = time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 0, t.Location())
+		*query = *query.Where("th.end_time <= ?", t)
 	}
 	return query
 }
