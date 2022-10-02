@@ -260,28 +260,30 @@ func UpdateTask(user *util.User, req *UpdateTaskReq) error {
 	util.RequireRole(user, util.ADMIN)
 
 	qry := config.GetDB()
-	qry = qry.Where("id = ?", req.Id)
+	qry = qry.Table("task").Where("id = ?", req.Id)
 
 	umap := make(map[string]any)
 
-	if util.IsEmpty(req.JobName) {
+	if !util.IsEmpty(req.JobName) {
 		umap["job_name"] = *req.JobName
 	}
-	if util.IsEmpty(req.TargetBean) {
+	if !util.IsEmpty(req.TargetBean) {
 		umap["target_bean"] = *req.TargetBean
 	}
-	if util.IsEmpty(req.CronExpr) {
+	if !util.IsEmpty(req.CronExpr) {
 		umap["cron_expr"] = *req.CronExpr
 	}
-	if util.IsEmpty(req.AppGroup) {
+	if !util.IsEmpty(req.AppGroup) {
 		umap["app_group"] = *req.AppGroup
 	}
 	if req.Enabled != nil {
 		umap["enabled"] = *req.Enabled
 	}
 	if req.ConcurrentEnabled != nil {
-		umap["concurrent_enabled"] = *req.ConcurrentEnabled
+		umap["concurrent_enabled"] = int(*req.ConcurrentEnabled)
 	}
+	umap["update_by"] = user.Username
+	umap["update_date"] = time.Now()
 
 	tx := qry.Updates(umap)
 	if tx.Error != nil {
