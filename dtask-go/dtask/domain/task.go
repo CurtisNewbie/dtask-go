@@ -208,7 +208,7 @@ func UpdateTaskLastRunInfo(req *UpdateLastRunInfoReq) error {
 	umap["last_run_start_time"] = time.Time(*req.LastRunStartTime)
 	umap["last_run_end_time"] = time.Time(*req.LastRunEndTime)
 	umap["last_run_by"] = req.LastRunBy
-	umap["last_run_result"] = req.LastRunResult
+	umap["last_run_result"] = (*req.LastRunResult)[:255]
 
 	tx := qry.Debug().Updates(umap)
 	if tx.Error != nil {
