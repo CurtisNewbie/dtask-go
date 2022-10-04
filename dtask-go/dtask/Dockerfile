@@ -2,6 +2,8 @@ FROM golang:1.18
 LABEL author="yongjie.zhuang"
 LABEL descrption="DTask GO - Task Web Console Backend"
 
+ENV TZ=Asia/Shanghai
+
 WORKDIR /usr/src/dtaskgo
 
 # for golang env

@@ -81,9 +81,13 @@ func RecordTaskHistory(req *RecordTaskHistoryReq) error {
 	db := config.GetDB().Table("task_history")
 	m := make(map[string]any)
 
+	st := time.Time(*req.StartTime)
+	et := time.Time(*req.EndTime)
+	// log.Infof("recordTaskHistory, start: %s, end: %s", dto.TimePrettyPrint(&st), dto.TimePrettyPrint(&et))
+
 	m["task_id"] = req.TaskId
-	m["start_time"] = time.Time(*req.StartTime)
-	m["end_time"] = time.Time(*req.EndTime)
+	m["start_time"] = st
+	m["end_time"] = et
 	m["run_by"] = req.RunBy
 	m["run_result"] = req.RunResult
 	m["create_time"] = time.Now()

@@ -204,11 +204,21 @@ func UpdateTaskLastRunInfo(req *UpdateLastRunInfoReq) error {
 	qry := config.GetDB()
 	qry = qry.Table("task").Where("id = ?", req.Id)
 
+	st := time.Time(*req.LastRunStartTime)
+	et := time.Time(*req.LastRunEndTime)
+	// log.Infof("updateLastRunInfo, start: %s, end: %s", dto.TimePrettyPrint(&st), dto.TimePrettyPrint(&et))
+
 	umap := make(map[string]any)
-	umap["last_run_start_time"] = time.Time(*req.LastRunStartTime)
-	umap["last_run_end_time"] = time.Time(*req.LastRunEndTime)
+	umap["last_run_start_time"] = st
+	umap["last_run_end_time"] = et
 	umap["last_run_by"] = req.LastRunBy
-	umap["last_run_result"] = (*req.LastRunResult)[:255]
+
+	end := 255
+	curr := len(*req.LastRunResult)
+	if curr < 255 {
+		end = curr
+	}
+	umap["last_run_result"] = (*req.LastRunResult)[:end]
 
 	tx := qry.Debug().Updates(umap)
 	if tx.Error != nil {
