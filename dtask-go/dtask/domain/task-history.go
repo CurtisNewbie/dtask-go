@@ -3,7 +3,8 @@ package domain
 import (
 	"time"
 
-	"github.com/curtisnewbie/gocommon/config"
+	"github.com/curtisnewbie/gocommon/mysql"
+	"github.com/curtisnewbie/gocommon/redis"
 	"github.com/curtisnewbie/gocommon/util"
 	"github.com/curtisnewbie/gocommon/web/dto"
 	"gorm.io/gorm"
@@ -76,9 +77,33 @@ type RecordTaskHistoryReq struct {
 	RunResult *string `json:"runResult"`
 }
 
+type DeclareTaskReq struct {
+
+	/** job's name */
+	JobName *string `json:"jobName"`
+
+	/** name of bean that will be executed */
+	TargetBean *string `json:"targetBean"`
+
+	/** cron expression */
+	CronExpr *string `json:"cronExpr"`
+
+	/** app group that runs this task */
+	AppGroup *string `json:"appGroup"`
+
+	/** whether the task is enabled: 0-disabled, 1-enabled */
+	Enabled *int `json:"enabled"`
+
+	/** whether the task can be executed concurrently: 0-disabled, 1-enabled */
+	ConcurrentEnabled *int `json:"concurrentEnabled"`
+
+	/** Whether this declaration overrides existing configuration */
+	Overridden *bool `json:"overridden"`
+}
+
 func RecordTaskHistory(req *RecordTaskHistoryReq) error {
 
-	db := config.GetDB().Table("task_history")
+	db := mysql.GetDB().Table("task_history")
 	m := make(map[string]any)
 
 	st := time.Time(*req.StartTime)
@@ -109,7 +134,7 @@ func ListTaskHistoryByPage(user *util.User, req *ListTaskHistoryByPageReq) (*Lis
 	}
 
 	var histories []TaskHistoryWebVo
-	selectq := config.GetDB().
+	selectq := mysql.GetDB().
 		Table("task_history th").
 		Select("th.id, t.job_name, th.task_id, th.start_time, th.end_time, th.run_by, th.run_result").
 		Joins("LEFT JOIN task t ON th.task_id = t.id").
@@ -128,7 +153,7 @@ func ListTaskHistoryByPage(user *util.User, req *ListTaskHistoryByPageReq) (*Lis
 		histories = []TaskHistoryWebVo{}
 	}
 
-	countq := config.GetDB().
+	countq := mysql.GetDB().
 		Table("task_history th").
 		Select("count(th.id)").
 		Joins("LEFT JOIN task t ON th.task_id = t.id")
@@ -163,4 +188,40 @@ func _addWhereForListTaskHistoryByPage(req *ListTaskHistoryByPageReq, query *gor
 		*query = *query.Where("th.end_time <= ?", t)
 	}
 	return query
+}
+
+// Declare task
+func DeclareTask(req *DeclareTaskReq) error {
+	util.NonNil(req, "req is nil")
+	util.NonNil(req.JobName, "jobName is nil")
+	util.NonNil(req.CronExpr, "jobName is nil")
+	util.NonNil(req.Enabled, "jobName is nil")
+	util.NonNil(req.ConcurrentEnabled, "jobName is nil")
+	util.NonNil(req.Overridden, "jobName is nil")
+	util.NonNil(req.TargetBean, "jobName is nil")
+
+	appGroup := util.NonNil(req.AppGroup, "appGroup is nil")
+	_, e := redis.LockRun("task:declare:dtaskgo:"+*appGroup, func() any {
+
+		slt := "select id from task where app_group = ? and target_bean = ? limit 1"
+		var id int
+		tx := mysql.GetDB().Raw(slt, *appGroup, *req.TargetBean).Scan(&id)
+		if tx.Error != nil {
+			return tx.Error
+		}
+
+		if tx.RowsAffected < 1 {
+			ist := "insert into task (job_name, cron_expr, enabled, concurrent_enabled, target_bean, app_group, update_by, update_date) values (?, ?, ?, ?, ?, ?, ?, ?)"
+			tx := mysql.GetDB().Exec(ist, *req.JobName, *req.CronExpr, *req.Enabled, *req.ConcurrentEnabled, *req.TargetBean, *req.AppGroup, "JobDeclaration", time.Now())
+			return tx.Error
+		}
+
+		if !*req.Overridden {
+			return nil
+		}
+
+		udt := "update task set cron_expr = ?, concurrent_enabled = ?, enabled = ?, update_by = ?, update_date = ? where id = ?"
+		return mysql.GetDB().Exec(udt, *req.CronExpr, *req.ConcurrentEnabled, *req.Enabled, "JobDeclaration", time.Now(), id).Error
+	})
+	return e
 }

@@ -18,6 +18,7 @@ func RegisterTaskInternalRoutes(router *gin.Engine) {
 	router.GET(server.ResolvePath("/task/valid", false), util.BuildRouteHandler(ValidTaskRpc))
 	router.POST(server.ResolvePath("/task/disable", false), util.BuildJRouteHandler(DisableTaskRpc))
 	router.POST(server.ResolvePath("/task/history", false), util.BuildJRouteHandler(RecordTaskHistoryRpc))
+	router.POST(server.ResolvePath("/task/declare", false), util.BuildJRouteHandler(DeclareTaskRpc))
 }
 
 /*
@@ -62,6 +63,12 @@ func DisableTaskRpc(c *gin.Context, req *domain.DisableTaskReqVo) (any, error) {
 	curl -X POST http://localhost:8083/remote/task/history -d ' { "taskId": 1, "runResult" : "Very good", "runBy" : "scheduler", "startTime" : "2022-09-10 17:04:10", "endTime" : "2022-09-10 17:05:10" }'
 */
 func RecordTaskHistoryRpc(c *gin.Context, req *domain.RecordTaskHistoryReq) (any, error) {
-	e := domain.RecordTaskHistory(req)
-	return nil, e
+	return nil, domain.RecordTaskHistory(req)
+}
+
+/*
+	curl -X POST http://localhost:8083/remote/task/declare -d '{"jobName":"TestJob","targetBean":"testBean","cronExpr":"0 0 0/1 ? * *","appGroup":"go_group","enabled":0,"concurrentEnabled":0,"overridden":true}'
+*/
+func DeclareTaskRpc(c *gin.Context, req *domain.DeclareTaskReq) (any, error) {
+	return nil, domain.DeclareTask(req)
 }

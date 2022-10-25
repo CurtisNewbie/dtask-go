@@ -1,0 +1,22 @@
+{
+    "db": {
+        "enabled": true,
+        "user": "${mysqlusername}",
+        "password": "${mysqlpassword}",
+        "database": "dtaskgo",
+        "host": "${mysqladdr}",
+        "port": "3306"
+    },
+    "redis": {
+        "enabled": true,
+        "address": "redis",
+        "port": "6379",
+        "username": "",
+        "password": "",
+        "database": 0
+    },
+    "server": {
+        "host": "0.0.0.0",
+        "port": "8081"
+    }
+}

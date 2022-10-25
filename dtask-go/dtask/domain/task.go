@@ -5,7 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/curtisnewbie/gocommon/config"
+	"github.com/curtisnewbie/gocommon/mysql"
+	"github.com/curtisnewbie/gocommon/redis"
 	"github.com/curtisnewbie/gocommon/util"
 	"github.com/curtisnewbie/gocommon/web/dto"
 	"github.com/curtisnewbie/gocommon/weberr"
@@ -158,7 +159,7 @@ type DisableTaskReqVo struct {
 }
 
 func DisableTask(req *DisableTaskReqVo) error {
-	qry := config.GetDB()
+	qry := mysql.GetDB()
 	qry = qry.Table("task").Where("id = ?", req.Id)
 
 	umap := make(map[string]any)
@@ -176,7 +177,7 @@ func DisableTask(req *DisableTaskReqVo) error {
 
 func IsEnabledTask(taskId *int) error {
 	var id int
-	if tx := config.GetDB().Raw("select id from task where id = ? and enabled = 1", *taskId).Scan(&id); tx.Error != nil {
+	if tx := mysql.GetDB().Raw("select id from task where id = ? and enabled = 1", *taskId).Scan(&id); tx.Error != nil {
 		return tx.Error
 	}
 
@@ -201,7 +202,7 @@ func UpdateTaskLastRunInfo(req *UpdateLastRunInfoReq) error {
 		panic("lastRunEndTime is required")
 	}
 
-	qry := config.GetDB()
+	qry := mysql.GetDB()
 	qry = qry.Table("task").Where("id = ?", req.Id)
 
 	st := time.Time(*req.LastRunStartTime)
@@ -247,7 +248,7 @@ func TriggerTask(user *util.User, req *TriggerTaskReqVo) error {
 	json := string(val)
 	log.Infof("Triggering task, key: %v, TriggeredJobKey: %+v, json: %s", key, tjk, json)
 
-	cmd := config.GetRedis().LPush(key, json)
+	cmd := redis.GetRedis().LPush(key, json)
 	if e := cmd.Err(); e != nil {
 		return e
 	}
@@ -257,7 +258,7 @@ func TriggerTask(user *util.User, req *TriggerTaskReqVo) error {
 
 func FindTaskAppGroup(id int) (*TaskIdAppGroup, error) {
 	var ta TaskIdAppGroup
-	tx := config.GetDB().Raw("select id, app_group from task where id = ?", id).Scan(&ta)
+	tx := mysql.GetDB().Raw("select id, app_group from task where id = ?", id).Scan(&ta)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
@@ -269,7 +270,7 @@ func UpdateTask(user *util.User, req *UpdateTaskReq) error {
 
 	util.RequireRole(user, util.ADMIN)
 
-	qry := config.GetDB()
+	qry := mysql.GetDB()
 	qry = qry.Table("task").Where("id = ?", req.Id)
 
 	umap := make(map[string]any)
@@ -306,7 +307,7 @@ func UpdateTask(user *util.User, req *UpdateTaskReq) error {
 func ListAllTasks(appGroup *string) (*[]TaskWebVo, error) {
 
 	var tasks []TaskWebVo
-	selectq := config.GetDB().Table("task").Where("app_group = ?", *appGroup)
+	selectq := mysql.GetDB().Table("task").Where("app_group = ?", *appGroup)
 
 	tx := selectq.Scan(&tasks)
 	if tx.Error != nil {
@@ -329,7 +330,7 @@ func ListTaskByPage(user *util.User, req *ListTaskByPageReqWebVo) (*ListTaskByPa
 	}
 
 	var tasks []TaskWebVo
-	selectq := config.GetDB().
+	selectq := mysql.GetDB().
 		Table("task").
 		Limit(req.Paging.Limit).
 		Offset(dto.CalcOffset(req.Paging)).
@@ -345,7 +346,7 @@ func ListTaskByPage(user *util.User, req *ListTaskByPageReqWebVo) (*ListTaskByPa
 		tasks = []TaskWebVo{}
 	}
 
-	countq := config.GetDB().
+	countq := mysql.GetDB().
 		Table("task").
 		Select("COUNT(*)")
 
