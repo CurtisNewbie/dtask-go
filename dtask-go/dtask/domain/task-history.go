@@ -194,11 +194,11 @@ func _addWhereForListTaskHistoryByPage(req *ListTaskHistoryByPageReq, query *gor
 func DeclareTask(req *DeclareTaskReq) error {
 	util.NonNil(req, "req is nil")
 	util.NonNil(req.JobName, "jobName is nil")
-	util.NonNil(req.CronExpr, "jobName is nil")
-	util.NonNil(req.Enabled, "jobName is nil")
-	util.NonNil(req.ConcurrentEnabled, "jobName is nil")
-	util.NonNil(req.Overridden, "jobName is nil")
-	util.NonNil(req.TargetBean, "jobName is nil")
+	util.NonNil(req.CronExpr, "cronExpr is nil")
+	util.NonNil(req.Enabled, "enabled is nil")
+	util.NonNil(req.ConcurrentEnabled, "concurrentEnabled is nil")
+	util.NonNil(req.Overridden, "overriden is nil")
+	util.NonNil(req.TargetBean, "targetBean is nil")
 
 	appGroup := util.NonNil(req.AppGroup, "appGroup is nil")
 	_, e := redis.LockRun("task:declare:dtaskgo:"+*appGroup, func() any {
