@@ -1,0 +1,41 @@
+mode.production: true 
+
+mysql:
+  enabled: true 
+  user: "${mysqlusername}" 
+  password: "${mysqlpassword}" 
+  database: "dtaskgo" 
+  host: "${mysqladdr}" 
+  port: "3306" 
+
+redis:
+  enabled: true 
+  address: "redis" 
+  port: "6379" 
+  username: "" 
+  password: "" 
+  database: 0
+
+server: 
+  host: "0.0.0.0" 
+  port: "8083" 
+  gracefulShutdownTimeSec: 5
+
+consul: 
+  enabled: true
+  registerName: "dtaskgo" 
+  consulAddress: consul:8500
+  healthCheckUrl: /health
+  healthCheckInterval: 15s
+  healthCheckTimeout: 5s
+  healthCheckFailedDeregisterAfter: 5s
+
+tracing.propagation.keys:
+  - id
+  - userno
+  - username
+  - role
+  - services
+
+logging.rolling.file:
+  "/usr/src/dtaskgo/logs/dtaskgo.log"

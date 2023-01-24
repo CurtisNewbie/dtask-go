@@ -5,12 +5,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/curtisnewbie/gocommon/common"
 	"github.com/curtisnewbie/gocommon/mysql"
 	"github.com/curtisnewbie/gocommon/redis"
-	"github.com/curtisnewbie/gocommon/util"
-	"github.com/curtisnewbie/gocommon/web/dto"
-	"github.com/curtisnewbie/gocommon/weberr"
-	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -67,10 +64,10 @@ type TaskWebVo struct {
 	AppGroup string `json:"appGroup"`
 
 	/** the last time this task was executed */
-	LastRunStartTime *dto.TTime `json:"lastRunStartTime"`
+	LastRunStartTime *common.TTime `json:"lastRunStartTime"`
 
 	/** the last time this task was finished */
-	LastRunEndTime *dto.TTime `json:"lastRunEndTime"`
+	LastRunEndTime *common.TTime `json:"lastRunEndTime"`
 
 	/** app that previously ran this task */
 	LastRunBy string `json:"lastRunBy"`
@@ -85,19 +82,19 @@ type TaskWebVo struct {
 	ConcurrentEnabled TaskConcurrentEnabled `json:"concurrentEnabled"`
 
 	/** update date */
-	UpdateDate *dto.TTime `json:"updateDate"`
+	UpdateDate *common.TTime `json:"updateDate"`
 
 	/** updated by */
 	UpdateBy string `json:"updateBy"`
 }
 
 type ListTaskByPageRespWebVo struct {
-	Tasks  *[]TaskWebVo `json:"list"`
-	Paging *dto.Paging  `json:"pagingVo"`
+	Tasks  *[]TaskWebVo   `json:"list"`
+	Paging *common.Paging `json:"pagingVo"`
 }
 
 type ListTaskByPageReqWebVo struct {
-	Paging *dto.Paging `json:"pagingVo"`
+	Paging *common.Paging `json:"pagingVo"`
 
 	/** job's name */
 	JobName *string `json:"jobName"`
@@ -131,10 +128,10 @@ type UpdateLastRunInfoReq struct {
 	Id *int `json:"id"`
 
 	/** the last time this task was executed */
-	LastRunStartTime *dto.TTime `json:"lastRunStartTime"`
+	LastRunStartTime *common.TTime `json:"lastRunStartTime"`
 
 	/** the last time this task was finished */
-	LastRunEndTime *dto.TTime `json:"lastRunEndTime"`
+	LastRunEndTime *common.TTime `json:"lastRunEndTime"`
 
 	/** app that previously ran this task */
 	LastRunBy *string `json:"lastRunBy"`
@@ -152,14 +149,14 @@ type DisableTaskReqVo struct {
 	LastRunResult string `json:"lastRunResult"`
 
 	/** update date */
-	UpdateDate dto.TTime `json:"updateDate"`
+	UpdateDate common.TTime `json:"updateDate"`
 
 	/** updated by */
 	UpdateBy string `json:"updateBy"`
 }
 
-func DisableTask(req *DisableTaskReqVo) error {
-	qry := mysql.GetDB()
+func DisableTask(ec common.ExecContext, req DisableTaskReqVo) error {
+	qry := mysql.GetMySql()
 	qry = qry.Table("task").Where("id = ?", req.Id)
 
 	umap := make(map[string]any)
@@ -175,20 +172,20 @@ func DisableTask(req *DisableTaskReqVo) error {
 	return nil
 }
 
-func IsEnabledTask(taskId *int) error {
+func IsEnabledTask(ec common.ExecContext, taskId int) error {
 	var id int
-	if tx := mysql.GetDB().Raw("select id from task where id = ? and enabled = 1", *taskId).Scan(&id); tx.Error != nil {
+	if tx := mysql.GetMySql().Raw("select id from task where id = ? and enabled = 1", taskId).Scan(&id); tx.Error != nil {
 		return tx.Error
 	}
 
 	if id < 1 {
-		return weberr.NewWebErr("Task not found or disabled")
+		return common.NewWebErr("Task not found or disabled")
 	}
 	return nil
 }
 
-func UpdateTaskLastRunInfo(req *UpdateLastRunInfoReq) error {
-	log.Infof("Received: %+v", req)
+func UpdateTaskLastRunInfo(ec common.ExecContext, req UpdateLastRunInfoReq) error {
+	ec.Log.Infof("Received: %+v", req)
 	if req.Id == nil {
 		panic("id is required")
 	}
@@ -202,12 +199,11 @@ func UpdateTaskLastRunInfo(req *UpdateLastRunInfoReq) error {
 		panic("lastRunEndTime is required")
 	}
 
-	qry := mysql.GetDB()
+	qry := mysql.GetMySql()
 	qry = qry.Table("task").Where("id = ?", req.Id)
 
 	st := time.Time(*req.LastRunStartTime)
 	et := time.Time(*req.LastRunEndTime)
-	// log.Infof("updateLastRunInfo, start: %s, end: %s", dto.TimePrettyPrint(&st), dto.TimePrettyPrint(&et))
 
 	umap := make(map[string]any)
 	umap["last_run_start_time"] = st
@@ -221,7 +217,7 @@ func UpdateTaskLastRunInfo(req *UpdateLastRunInfoReq) error {
 	}
 	umap["last_run_result"] = (*req.LastRunResult)[:end]
 
-	tx := qry.Debug().Updates(umap)
+	tx := qry.Updates(umap)
 	if tx.Error != nil {
 		return tx.Error
 	}
@@ -229,9 +225,9 @@ func UpdateTaskLastRunInfo(req *UpdateLastRunInfoReq) error {
 }
 
 // Trigger a task
-func TriggerTask(user *util.User, req *TriggerTaskReqVo) error {
-
-	util.RequireRole(user, util.ADMIN)
+func TriggerTask(ec common.ExecContext, req TriggerTaskReqVo) error {
+	user := ec.User
+	common.RequireRole(user, common.ADMIN)
 
 	ta, e := FindTaskAppGroup(*req.Id)
 	if e != nil {
@@ -246,7 +242,7 @@ func TriggerTask(user *util.User, req *TriggerTaskReqVo) error {
 		return e
 	}
 	json := string(val)
-	log.Infof("Triggering task, key: %v, TriggeredJobKey: %+v, json: %s", key, tjk, json)
+	ec.Log.Infof("Triggering task, key: %v, TriggeredJobKey: %+v, json: %s", key, tjk, json)
 
 	cmd := redis.GetRedis().LPush(key, json)
 	if e := cmd.Err(); e != nil {
@@ -258,7 +254,7 @@ func TriggerTask(user *util.User, req *TriggerTaskReqVo) error {
 
 func FindTaskAppGroup(id int) (*TaskIdAppGroup, error) {
 	var ta TaskIdAppGroup
-	tx := mysql.GetDB().Raw("select id, app_group from task where id = ?", id).Scan(&ta)
+	tx := mysql.GetMySql().Raw("select id, app_group from task where id = ?", id).Scan(&ta)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
@@ -266,25 +262,25 @@ func FindTaskAppGroup(id int) (*TaskIdAppGroup, error) {
 }
 
 // Update task
-func UpdateTask(user *util.User, req *UpdateTaskReq) error {
+func UpdateTask(ec common.ExecContext, req UpdateTaskReq) error {
+	user := ec.User
+	common.RequireRole(user, common.ADMIN)
 
-	util.RequireRole(user, util.ADMIN)
-
-	qry := mysql.GetDB()
+	qry := mysql.GetMySql()
 	qry = qry.Table("task").Where("id = ?", req.Id)
 
 	umap := make(map[string]any)
 
-	if !util.IsEmpty(req.JobName) {
+	if !common.IsEmpty(req.JobName) {
 		umap["job_name"] = *req.JobName
 	}
-	if !util.IsEmpty(req.TargetBean) {
+	if !common.IsEmpty(req.TargetBean) {
 		umap["target_bean"] = *req.TargetBean
 	}
-	if !util.IsEmpty(req.CronExpr) {
+	if !common.IsEmpty(req.CronExpr) {
 		umap["cron_expr"] = *req.CronExpr
 	}
-	if !util.IsEmpty(req.AppGroup) {
+	if !common.IsEmpty(req.AppGroup) {
 		umap["app_group"] = *req.AppGroup
 	}
 	if req.Enabled != nil {
@@ -304,10 +300,10 @@ func UpdateTask(user *util.User, req *UpdateTaskReq) error {
 }
 
 // List all tasks for the appGroup
-func ListAllTasks(appGroup *string) (*[]TaskWebVo, error) {
+func ListAllTasks(ec common.ExecContext, appGroup string) (*[]TaskWebVo, error) {
 
 	var tasks []TaskWebVo
-	selectq := mysql.GetDB().Table("task").Where("app_group = ?", *appGroup)
+	selectq := mysql.GetMySql().Table("task").Where("app_group = ?", appGroup)
 
 	tx := selectq.Scan(&tasks)
 	if tx.Error != nil {
@@ -321,22 +317,23 @@ func ListAllTasks(appGroup *string) (*[]TaskWebVo, error) {
 }
 
 // List tasks
-func ListTaskByPage(user *util.User, req *ListTaskByPageReqWebVo) (*ListTaskByPageRespWebVo, error) {
+func ListTaskByPage(ec common.ExecContext, req ListTaskByPageReqWebVo) (*ListTaskByPageRespWebVo, error) {
+	user := ec.User
 
-	util.RequireRole(user, util.ADMIN)
+	common.RequireRole(user, common.ADMIN)
 
 	if req.Paging == nil {
-		req.Paging = &dto.Paging{Limit: 30, Page: 1}
+		req.Paging = &common.Paging{Limit: 30, Page: 1}
 	}
 
 	var tasks []TaskWebVo
-	selectq := mysql.GetDB().
+	selectq := mysql.GetMySql().
 		Table("task").
 		Limit(req.Paging.Limit).
-		Offset(dto.CalcOffset(req.Paging)).
+		Offset(common.CalcOffset(req.Paging)).
 		Order("app_group, id desc")
 
-	_addWhereForListTaskByPage(req, selectq)
+	_addWhereForListTaskByPage(&req, selectq)
 
 	tx := selectq.Scan(&tasks)
 	if tx.Error != nil {
@@ -346,11 +343,11 @@ func ListTaskByPage(user *util.User, req *ListTaskByPageReqWebVo) (*ListTaskByPa
 		tasks = []TaskWebVo{}
 	}
 
-	countq := mysql.GetDB().
+	countq := mysql.GetMySql().
 		Table("task").
 		Select("COUNT(*)")
 
-	_addWhereForListTaskByPage(req, countq)
+	_addWhereForListTaskByPage(&req, countq)
 
 	var total int
 	tx = countq.Scan(&total)
@@ -358,14 +355,14 @@ func ListTaskByPage(user *util.User, req *ListTaskByPageReqWebVo) (*ListTaskByPa
 		return nil, tx.Error
 	}
 
-	return &ListTaskByPageRespWebVo{Tasks: &tasks, Paging: dto.BuildResPage(req.Paging, total)}, nil
+	return &ListTaskByPageRespWebVo{Tasks: &tasks, Paging: common.BuildResPage(req.Paging, total)}, nil
 }
 
 func _addWhereForListTaskByPage(req *ListTaskByPageReqWebVo, query *gorm.DB) *gorm.DB {
-	if !util.IsEmpty(req.JobName) {
+	if !common.IsEmpty(req.JobName) {
 		*query = *query.Where("job_name like ?", "%"+*req.JobName+"%")
 	}
-	if !util.IsEmpty(req.AppGroup) {
+	if !common.IsEmpty(req.AppGroup) {
 		*query = *query.Where("app_group like ?", "%"+*req.AppGroup+"%")
 	}
 	if req.Enabled != nil {

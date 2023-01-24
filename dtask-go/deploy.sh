@@ -16,10 +16,9 @@ scp -r dtask/* "${remote}:${remote_path}"
 if [ ! $? -eq 0 ]; then
     exit -1
 fi
-scp dtask/app-conf-prod.json "${remote}:${remote_config_path}"
+scp dtask/app-conf-prod.yml "${remote}:${remote_config_path}"
 if [ ! $? -eq 0 ]; then
     exit -1
 fi
 
-ssh  "alphaboi@curtisnewbie.com" "mv ~/services/dtaskgo/logs/dtaskgo.log ~/services/dtaskgo/logs/dtaskgo-$(date +'%Y%m%d_%H%M%S').log"
 ssh  "alphaboi@curtisnewbie.com" "cd services; docker-compose up -d --build dtaskgo"
