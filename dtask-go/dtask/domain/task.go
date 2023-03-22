@@ -227,7 +227,6 @@ func UpdateTaskLastRunInfo(ec common.ExecContext, req UpdateLastRunInfoReq) erro
 // Trigger a task
 func TriggerTask(ec common.ExecContext, req TriggerTaskReqVo) error {
 	user := ec.User
-	common.RequireRole(user, common.ADMIN)
 
 	ta, e := FindTaskAppGroup(*req.Id)
 	if e != nil {
@@ -264,7 +263,6 @@ func FindTaskAppGroup(id int) (*TaskIdAppGroup, error) {
 // Update task
 func UpdateTask(ec common.ExecContext, req UpdateTaskReq) error {
 	user := ec.User
-	common.RequireRole(user, common.ADMIN)
 
 	qry := mysql.GetMySql()
 	qry = qry.Table("task").Where("id = ?", req.Id)
@@ -318,10 +316,6 @@ func ListAllTasks(ec common.ExecContext, appGroup string) (*[]TaskWebVo, error) 
 
 // List tasks
 func ListTaskByPage(ec common.ExecContext, req ListTaskByPageReqWebVo) (*ListTaskByPageRespWebVo, error) {
-	user := ec.User
-
-	common.RequireRole(user, common.ADMIN)
-
 	if req.Paging == nil {
 		req.Paging = &common.Paging{Limit: 30, Page: 1}
 	}

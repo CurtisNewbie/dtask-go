@@ -124,8 +124,6 @@ func RecordTaskHistory(ec common.ExecContext, req RecordTaskHistoryReq) error {
 
 // List tasks
 func ListTaskHistoryByPage(ec common.ExecContext, req ListTaskHistoryByPageReq) (*ListTaskHistoryByPageResp, error) {
-	user := ec.User
-	common.RequireRole(user, common.ADMIN)
 
 	if req.Paging == nil {
 		req.Paging = &common.Paging{Limit: 30, Page: 1}
