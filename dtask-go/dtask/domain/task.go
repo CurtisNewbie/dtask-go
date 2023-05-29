@@ -89,8 +89,8 @@ type TaskWebVo struct {
 }
 
 type ListTaskByPageRespWebVo struct {
-	Tasks  *[]TaskWebVo   `json:"list"`
-	Paging *common.Paging `json:"pagingVo"`
+	Tasks  *[]TaskWebVo  `json:"list"`
+	Paging common.Paging `json:"pagingVo"`
 }
 
 type ListTaskByPageReqWebVo struct {
@@ -324,7 +324,7 @@ func ListTaskByPage(ec common.ExecContext, req ListTaskByPageReqWebVo) (*ListTas
 	selectq := mysql.GetMySql().
 		Table("task").
 		Limit(req.Paging.Limit).
-		Offset(common.CalcOffset(req.Paging)).
+		Offset(req.Paging.GetOffset()).
 		Order("app_group, id desc")
 
 	_addWhereForListTaskByPage(&req, selectq)
@@ -349,7 +349,7 @@ func ListTaskByPage(ec common.ExecContext, req ListTaskByPageReqWebVo) (*ListTas
 		return nil, tx.Error
 	}
 
-	return &ListTaskByPageRespWebVo{Tasks: &tasks, Paging: common.BuildResPage(req.Paging, total)}, nil
+	return &ListTaskByPageRespWebVo{Tasks: &tasks, Paging: req.Paging.ToRespPage(total)}, nil
 }
 
 func _addWhereForListTaskByPage(req *ListTaskByPageReqWebVo, query *gorm.DB) *gorm.DB {

@@ -25,28 +25,28 @@ func main() {
 	})
 
 	// open-api routes
-	server.PostJ(server.OpenApiPath("/task/list"), web.ListTaskByPageEndpoint)
+	server.IPost(server.OpenApiPath("/task/list"), web.ListTaskByPageEndpoint)
 	reportPath(ec, gclient.CreatePathReq{Url: server.OpenApiPath("/task/list"), Type: gclient.PT_PROTECTED, Desc: "List tasks", Method: "POST"})
 
-	server.PostJ(server.OpenApiPath("/task/history"), web.ListTaskHistoryByPageEndpoint)
+	server.IPost(server.OpenApiPath("/task/history"), web.ListTaskHistoryByPageEndpoint)
 	reportPath(ec, gclient.CreatePathReq{Url: server.OpenApiPath("/task/histroy"), Type: gclient.PT_PROTECTED, Desc: "List task execution history",
 		Method: "POST"})
 
-	server.PostJ(server.OpenApiPath("/task/update"), web.UpdateTaskEndpoint)
+	server.IPost(server.OpenApiPath("/task/update"), web.UpdateTaskEndpoint)
 	reportPath(ec, gclient.CreatePathReq{Url: server.OpenApiPath("/task/update"), Type: gclient.PT_PROTECTED, Desc: "Update task", Method: "POST"})
 
-	server.PostJ(server.OpenApiPath("/task/trigger"), web.TriggerTaskEndpoint)
+	server.IPost(server.OpenApiPath("/task/trigger"), web.TriggerTaskEndpoint)
 	reportPath(ec, gclient.CreatePathReq{Url: server.OpenApiPath("/task/trigger"), Type: gclient.PT_PROTECTED, Desc: "Trigger task", Method: "POST"})
 
 	// Internal RPC Calls (these should be protected by the gateway)
 	server.Get(server.InternalApiPath("/task/all"), web.ListAllTaskRpc)
 	server.Get(server.InternalApiPath("/task/valid"), web.ValidTaskRpc)
-	server.PostJ(server.InternalApiPath("/task/lastRunInfo/update"), web.UpdateTaskLastRunInfoRpc)
-	server.PostJ(server.InternalApiPath("/task/disable"), web.DisableTaskRpc)
-	server.PostJ(server.InternalApiPath("/task/history"), web.RecordTaskHistoryRpc)
-	server.PostJ(server.InternalApiPath("/task/declare"), web.DeclareTaskRpc)
+	server.IPost(server.InternalApiPath("/task/lastRunInfo/update"), web.UpdateTaskLastRunInfoRpc)
+	server.IPost(server.InternalApiPath("/task/disable"), web.DisableTaskRpc)
+	server.IPost(server.InternalApiPath("/task/history"), web.RecordTaskHistoryRpc)
+	server.IPost(server.InternalApiPath("/task/declare"), web.DeclareTaskRpc)
 
-	server.DefaultBootstrapServer(os.Args)
+	server.DefaultBootstrapServer(os.Args, ec)
 }
 
 func reportPath(ec common.ExecContext, r gclient.CreatePathReq) {

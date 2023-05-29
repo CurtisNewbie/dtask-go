@@ -35,7 +35,7 @@ type TaskHistoryWebVo struct {
 
 type ListTaskHistoryByPageResp struct {
 	Histories *[]TaskHistoryWebVo `json:"list"`
-	Paging    *common.Paging         `json:"pagingVo"`
+	Paging    common.Paging       `json:"pagingVo"`
 }
 
 type ListTaskHistoryByPageReq struct {
@@ -134,7 +134,7 @@ func ListTaskHistoryByPage(ec common.ExecContext, req ListTaskHistoryByPageReq) 
 		Table("task_history th").
 		Select("th.id, t.job_name, th.task_id, th.start_time, th.end_time, th.run_by, th.run_result").
 		Joins("LEFT JOIN task t ON th.task_id = t.id").
-		Offset(common.CalcOffset(req.Paging)).
+		Offset(req.Paging.GetOffset()).
 		Limit(req.Paging.Limit).
 		Order("th.id DESC")
 
@@ -163,7 +163,7 @@ func ListTaskHistoryByPage(ec common.ExecContext, req ListTaskHistoryByPageReq) 
 		return nil, tx.Error
 	}
 
-	return &ListTaskHistoryByPageResp{Histories: &histories, Paging: common.BuildResPage(req.Paging, total)}, nil
+	return &ListTaskHistoryByPageResp{Histories: &histories, Paging: req.Paging.ToRespPage(total)}, nil
 }
 
 func _addWhereForListTaskHistoryByPage(req *ListTaskHistoryByPageReq, query *gorm.DB) *gorm.DB {
