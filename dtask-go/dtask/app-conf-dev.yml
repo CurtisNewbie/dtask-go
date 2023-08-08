@@ -1,29 +1,29 @@
+app.name: dtaskgo
 mode.production: false
 
 mysql:
-  enabled: true 
+  enabled: true
   user: root
-  password: 123456
+  password:
   database: fileServer
   host: localhost
   port: 3306
 
 redis:
-  enabled: true 
+  enabled: true
   address: localhost
   port: 6379
-  username: 
-  password: 
+  username:
+  password:
   database: 0
 
-server: 
+server:
   host: localhost
   port: 8083
   gracefulShutdownTimeSec: 5
 
-consul: 
+consul:
   enabled: true
-  registerName: "dtaskgo"
   consulAddress: localhost:8500
   healthCheckUrl: /health
   healthCheckInterval: 5s
@@ -36,6 +36,3 @@ tracing.propagation.keys:
   - username
   - role
   - services
-
-logging.rolling.file:
-  "dtaskgo.log"

@@ -1,12 +1,12 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"os"
 
 	"github.com/curtisnewbie/dtask/web"
-	"github.com/curtisnewbie/goauth/client/goauth-client-go/gclient"
 	"github.com/curtisnewbie/gocommon/common"
+	"github.com/curtisnewbie/gocommon/goauth"
 	"github.com/curtisnewbie/gocommon/server"
 )
 
@@ -17,45 +17,37 @@ const (
 
 func main() {
 
-	ec := common.EmptyExecContext()
-	server.OnServerBootstrapped(func() {
-		if e := gclient.AddResource(ec.Ctx, gclient.AddResourceReq{Code: MNG_TASK_CODE, Name: MNG_TASK_NAME}); e != nil {
-			log.Fatalf("gclient.AddResource, %v", e)
+	server.PreServerBootstrap(func(ec common.ExecContext) error {
+		if e := goauth.AddResource(ec.Ctx, goauth.AddResourceReq{Code: MNG_TASK_CODE, Name: MNG_TASK_NAME}); e != nil {
+			return fmt.Errorf("gclient.AddResource, %v", e)
 		}
+		return nil
 	})
 
 	// open-api routes
-	server.IPost(server.OpenApiPath("/task/list"), web.ListTaskByPageEndpoint)
-	reportPath(ec, gclient.CreatePathReq{Url: server.OpenApiPath("/task/list"), Type: gclient.PT_PROTECTED, Desc: "List tasks", Method: "POST"})
+	server.IPost("/open/api/task/list",
+		web.ListTaskByPageEndpoint,
+		goauth.PathDocExtra(goauth.PathDoc{Type: goauth.PT_PROTECTED, Desc: "List tasks", Code: MNG_TASK_CODE}))
 
-	server.IPost(server.OpenApiPath("/task/history"), web.ListTaskHistoryByPageEndpoint)
-	reportPath(ec, gclient.CreatePathReq{Url: server.OpenApiPath("/task/histroy"), Type: gclient.PT_PROTECTED, Desc: "List task execution history",
-		Method: "POST"})
+	server.IPost("/open/api/task/history",
+		web.ListTaskHistoryByPageEndpoint,
+		goauth.PathDocExtra(goauth.PathDoc{Type: goauth.PT_PROTECTED, Desc: "List task execution history", Code: MNG_TASK_CODE}))
 
-	server.IPost(server.OpenApiPath("/task/update"), web.UpdateTaskEndpoint)
-	reportPath(ec, gclient.CreatePathReq{Url: server.OpenApiPath("/task/update"), Type: gclient.PT_PROTECTED, Desc: "Update task", Method: "POST"})
+	server.IPost("/open/api/task/update",
+		web.UpdateTaskEndpoint,
+		goauth.PathDocExtra(goauth.PathDoc{Type: goauth.PT_PROTECTED, Desc: "Update task", Code: MNG_TASK_CODE}))
 
-	server.IPost(server.OpenApiPath("/task/trigger"), web.TriggerTaskEndpoint)
-	reportPath(ec, gclient.CreatePathReq{Url: server.OpenApiPath("/task/trigger"), Type: gclient.PT_PROTECTED, Desc: "Trigger task", Method: "POST"})
+	server.IPost("/open/api/task/trigger",
+		web.TriggerTaskEndpoint,
+		goauth.PathDocExtra(goauth.PathDoc{Type: goauth.PT_PROTECTED, Desc: "Trigger task", Code: MNG_TASK_CODE}))
 
-	// Internal RPC Calls (these should be protected by the gateway)
-	server.Get(server.InternalApiPath("/task/all"), web.ListAllTaskRpc)
-	server.Get(server.InternalApiPath("/task/valid"), web.ValidTaskRpc)
-	server.IPost(server.InternalApiPath("/task/lastRunInfo/update"), web.UpdateTaskLastRunInfoRpc)
-	server.IPost(server.InternalApiPath("/task/disable"), web.DisableTaskRpc)
-	server.IPost(server.InternalApiPath("/task/history"), web.RecordTaskHistoryRpc)
-	server.IPost(server.InternalApiPath("/task/declare"), web.DeclareTaskRpc)
+	// internal endpoints (these are protected by the gateway)
+	server.Get("/remote/task/all", web.ListAllTaskRpc)
+	server.Get("/remote/task/valid", web.ValidTaskRpc)
+	server.IPost("/remote/task/lastRunInfo/update", web.UpdateTaskLastRunInfoRpc)
+	server.IPost("/remote/task/disable", web.DisableTaskRpc)
+	server.IPost("/remote/task/history", web.RecordTaskHistoryRpc)
+	server.IPost("/remote/task/declare", web.DeclareTaskRpc)
 
-	server.DefaultBootstrapServer(os.Args, ec)
-}
-
-func reportPath(ec common.ExecContext, r gclient.CreatePathReq) {
-	server.OnServerBootstrapped(func() {
-		r.Url = "/dtaskgo" + r.Url
-		r.Group = "dtaskgo"
-		r.ResCode = MNG_TASK_CODE
-		if e := gclient.AddPath(ec.Ctx, r); e != nil {
-			log.Fatalf("gclient.AddPath, req: %+v, %v", r, e)
-		}
-	})
+	server.BootstrapServer(os.Args)
 }

@@ -79,25 +79,25 @@ type RecordTaskHistoryReq struct {
 type DeclareTaskReq struct {
 
 	/** job's name */
-	JobName *string `json:"jobName"`
+	JobName *string `json:"jobName" validation:"notNil"`
 
 	/** name of bean that will be executed */
-	TargetBean *string `json:"targetBean"`
+	TargetBean *string `json:"targetBean" validation:"notNil"`
 
 	/** cron expression */
-	CronExpr *string `json:"cronExpr"`
+	CronExpr *string `json:"cronExpr" validation:"notNil"`
 
 	/** app group that runs this task */
-	AppGroup *string `json:"appGroup"`
+	AppGroup *string `json:"appGroup" validation:"notNil"`
 
 	/** whether the task is enabled: 0-disabled, 1-enabled */
-	Enabled *int `json:"enabled"`
+	Enabled *int `json:"enabled" validation:"notNil"`
 
 	/** whether the task can be executed concurrently: 0-disabled, 1-enabled */
-	ConcurrentEnabled *int `json:"concurrentEnabled"`
+	ConcurrentEnabled *int `json:"concurrentEnabled" validation:"notNil"`
 
 	/** Whether this declaration overrides existing configuration */
-	Overridden *bool `json:"overridden"`
+	Overridden *bool `json:"overridden" validation:"notNil"`
 }
 
 func RecordTaskHistory(ec common.ExecContext, req RecordTaskHistoryReq) error {
@@ -188,14 +188,7 @@ func _addWhereForListTaskHistoryByPage(req *ListTaskHistoryByPageReq, query *gor
 
 // Declare task
 func DeclareTask(ec common.ExecContext, req DeclareTaskReq) error {
-	common.NonNil(req.JobName, "jobName is nil")
-	common.NonNil(req.CronExpr, "cronExpr is nil")
-	common.NonNil(req.Enabled, "enabled is nil")
-	common.NonNil(req.ConcurrentEnabled, "concurrentEnabled is nil")
-	common.NonNil(req.Overridden, "overriden is nil")
-	common.NonNil(req.TargetBean, "targetBean is nil")
-
-	appGroup := common.NonNil(req.AppGroup, "appGroup is nil")
+	appGroup := req.AppGroup
 	_, e := redis.RLockRun(ec, "task:declare:dtaskgo:"+*appGroup, func() (any, error) {
 
 		slt := "select id from task where app_group = ? and target_bean = ? limit 1"
