@@ -30,9 +30,17 @@ consul:
   healthCheckTimeout: 5s
   healthCheckFailedDeregisterAfter: 5s
 
+rabbitmq:
+  enabled: true
+  username: guest
+  password: guest
+  vhost: "/"
+
 tracing.propagation.keys:
   - id
   - userno
   - username
   - role
   - services
+
+goauth.client.enabled: false

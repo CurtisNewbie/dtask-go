@@ -100,7 +100,7 @@ type DeclareTaskReq struct {
 	Overridden *bool `json:"overridden" validation:"notNil"`
 }
 
-func RecordTaskHistory(ec common.ExecContext, req RecordTaskHistoryReq) error {
+func RecordTaskHistory(ec common.Rail, req RecordTaskHistoryReq) error {
 
 	db := mysql.GetMySql().Table("task_history")
 	m := make(map[string]any)
@@ -123,7 +123,7 @@ func RecordTaskHistory(ec common.ExecContext, req RecordTaskHistoryReq) error {
 }
 
 // List tasks
-func ListTaskHistoryByPage(ec common.ExecContext, req ListTaskHistoryByPageReq) (*ListTaskHistoryByPageResp, error) {
+func ListTaskHistoryByPage(ec common.Rail, req ListTaskHistoryByPageReq) (*ListTaskHistoryByPageResp, error) {
 
 	if req.Paging == nil {
 		req.Paging = &common.Paging{Limit: 30, Page: 1}
@@ -170,7 +170,7 @@ func _addWhereForListTaskHistoryByPage(req *ListTaskHistoryByPageReq, query *gor
 	if req.TaskId != nil {
 		*query = *query.Where("th.task_id = ?", *req.TaskId)
 	}
-	if !common.IsEmpty(req.JobName) {
+	if req.JobName != nil && !common.IsBlankStr(*req.JobName) {
 		*query = *query.Where("t.job_name like ?", "%"+*req.JobName+"%")
 	}
 	if req.StartTime != nil {
@@ -187,7 +187,7 @@ func _addWhereForListTaskHistoryByPage(req *ListTaskHistoryByPageReq, query *gor
 }
 
 // Declare task
-func DeclareTask(ec common.ExecContext, req DeclareTaskReq) error {
+func DeclareTask(ec common.Rail, req DeclareTaskReq) error {
 	appGroup := req.AppGroup
 	_, e := redis.RLockRun(ec, "task:declare:dtaskgo:"+*appGroup, func() (any, error) {
 

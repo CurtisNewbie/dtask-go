@@ -30,6 +30,14 @@ consul:
   healthCheckTimeout: 5s
   healthCheckFailedDeregisterAfter: 5s
 
+rabbitmq:
+  enabled: true
+  host: "rabbitmq"
+  port: 5672
+  username: "${rabbitmqusername}"
+  password: "${rabbitmqpassword}"
+  vhost: "/"
+
 tracing.propagation.keys:
   - id
   - userno
@@ -39,3 +47,5 @@ tracing.propagation.keys:
 
 logging.rolling.file:
   "/usr/src/dtaskgo/logs/dtaskgo.log"
+
+goauth.client.enabled: true

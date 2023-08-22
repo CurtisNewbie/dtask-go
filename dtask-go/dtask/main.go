@@ -17,9 +17,11 @@ const (
 
 func main() {
 
-	server.PreServerBootstrap(func(ec common.ExecContext) error {
-		if e := goauth.AddResource(ec.Ctx, goauth.AddResourceReq{Code: MNG_TASK_CODE, Name: MNG_TASK_NAME}); e != nil {
-			return fmt.Errorf("gclient.AddResource, %v", e)
+	server.PostServerBootstrapped(func(rail common.Rail) error {
+		if goauth.IsEnabled() {
+			if e := goauth.AddResourceAsync(rail, goauth.AddResourceReq{Code: MNG_TASK_CODE, Name: MNG_TASK_NAME}); e != nil {
+				return fmt.Errorf("gclient.AddResource, %v", e)
+			}
 		}
 		return nil
 	})

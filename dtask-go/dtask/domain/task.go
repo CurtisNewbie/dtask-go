@@ -155,7 +155,7 @@ type DisableTaskReqVo struct {
 	UpdateBy string `json:"updateBy"`
 }
 
-func DisableTask(ec common.ExecContext, req DisableTaskReqVo) error {
+func DisableTask(ec common.Rail, req DisableTaskReqVo) error {
 	qry := mysql.GetMySql()
 	qry = qry.Table("task").Where("id = ?", req.Id)
 
@@ -172,7 +172,7 @@ func DisableTask(ec common.ExecContext, req DisableTaskReqVo) error {
 	return nil
 }
 
-func IsEnabledTask(ec common.ExecContext, taskId int) error {
+func IsEnabledTask(ec common.Rail, taskId int) error {
 	var id int
 	if tx := mysql.GetMySql().Raw("select id from task where id = ? and enabled = 1", taskId).Scan(&id); tx.Error != nil {
 		return tx.Error
@@ -184,8 +184,8 @@ func IsEnabledTask(ec common.ExecContext, taskId int) error {
 	return nil
 }
 
-func UpdateTaskLastRunInfo(ec common.ExecContext, req UpdateLastRunInfoReq) error {
-	ec.Log.Infof("Received: %+v", req)
+func UpdateTaskLastRunInfo(ec common.Rail, req UpdateLastRunInfoReq) error {
+	ec.Infof("Received: %+v", req)
 	if req.Id == nil {
 		panic("id is required")
 	}
@@ -225,9 +225,7 @@ func UpdateTaskLastRunInfo(ec common.ExecContext, req UpdateLastRunInfoReq) erro
 }
 
 // Trigger a task
-func TriggerTask(ec common.ExecContext, req TriggerTaskReqVo) error {
-	user := ec.User
-
+func TriggerTask(ec common.Rail, req TriggerTaskReqVo, user common.User) error {
 	ta, e := FindTaskAppGroup(*req.Id)
 	if e != nil {
 		return e
@@ -241,7 +239,7 @@ func TriggerTask(ec common.ExecContext, req TriggerTaskReqVo) error {
 		return e
 	}
 	json := string(val)
-	ec.Log.Infof("Triggering task, key: %v, TriggeredJobKey: %+v, json: %s", key, tjk, json)
+	ec.Infof("Triggering task, key: %v, TriggeredJobKey: %+v, json: %s", key, tjk, json)
 
 	cmd := redis.GetRedis().LPush(key, json)
 	if e := cmd.Err(); e != nil {
@@ -261,24 +259,23 @@ func FindTaskAppGroup(id int) (*TaskIdAppGroup, error) {
 }
 
 // Update task
-func UpdateTask(ec common.ExecContext, req UpdateTaskReq) error {
-	user := ec.User
+func UpdateTask(ec common.Rail, req UpdateTaskReq, user common.User) error {
 
 	qry := mysql.GetMySql()
 	qry = qry.Table("task").Where("id = ?", req.Id)
 
 	umap := make(map[string]any)
 
-	if !common.IsEmpty(req.JobName) {
+	if req.JobName != nil && !common.IsBlankStr(*req.JobName) {
 		umap["job_name"] = *req.JobName
 	}
-	if !common.IsEmpty(req.TargetBean) {
+	if req.TargetBean != nil && !common.IsBlankStr(*req.TargetBean) {
 		umap["target_bean"] = *req.TargetBean
 	}
-	if !common.IsEmpty(req.CronExpr) {
+	if req.CronExpr != nil && !common.IsBlankStr(*req.CronExpr) {
 		umap["cron_expr"] = *req.CronExpr
 	}
-	if !common.IsEmpty(req.AppGroup) {
+	if req.AppGroup != nil && !common.IsBlankStr(*req.AppGroup) {
 		umap["app_group"] = *req.AppGroup
 	}
 	if req.Enabled != nil {
@@ -298,7 +295,7 @@ func UpdateTask(ec common.ExecContext, req UpdateTaskReq) error {
 }
 
 // List all tasks for the appGroup
-func ListAllTasks(ec common.ExecContext, appGroup string) (*[]TaskWebVo, error) {
+func ListAllTasks(ec common.Rail, appGroup string) (*[]TaskWebVo, error) {
 
 	var tasks []TaskWebVo
 	selectq := mysql.GetMySql().Table("task").Where("app_group = ?", appGroup)
@@ -315,7 +312,7 @@ func ListAllTasks(ec common.ExecContext, appGroup string) (*[]TaskWebVo, error) 
 }
 
 // List tasks
-func ListTaskByPage(ec common.ExecContext, req ListTaskByPageReqWebVo) (*ListTaskByPageRespWebVo, error) {
+func ListTaskByPage(ec common.Rail, req ListTaskByPageReqWebVo) (*ListTaskByPageRespWebVo, error) {
 	if req.Paging == nil {
 		req.Paging = &common.Paging{Limit: 30, Page: 1}
 	}
@@ -353,10 +350,10 @@ func ListTaskByPage(ec common.ExecContext, req ListTaskByPageReqWebVo) (*ListTas
 }
 
 func _addWhereForListTaskByPage(req *ListTaskByPageReqWebVo, query *gorm.DB) *gorm.DB {
-	if !common.IsEmpty(req.JobName) {
+	if req.JobName != nil && !common.IsBlankStr(*req.JobName) {
 		*query = *query.Where("job_name like ?", "%"+*req.JobName+"%")
 	}
-	if !common.IsEmpty(req.AppGroup) {
+	if req.AppGroup != nil && !common.IsBlankStr(*req.AppGroup) {
 		*query = *query.Where("app_group like ?", "%"+*req.AppGroup+"%")
 	}
 	if req.Enabled != nil {
