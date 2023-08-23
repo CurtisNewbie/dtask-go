@@ -102,7 +102,7 @@ type DeclareTaskReq struct {
 
 func RecordTaskHistory(ec common.Rail, req RecordTaskHistoryReq) error {
 
-	db := mysql.GetMySql().Table("task_history")
+	db := mysql.GetConn().Table("task_history")
 	m := make(map[string]any)
 
 	st := time.Time(*req.StartTime)
@@ -130,7 +130,7 @@ func ListTaskHistoryByPage(ec common.Rail, req ListTaskHistoryByPageReq) (*ListT
 	}
 
 	var histories []TaskHistoryWebVo
-	selectq := mysql.GetMySql().
+	selectq := mysql.GetConn().
 		Table("task_history th").
 		Select("th.id, t.job_name, th.task_id, th.start_time, th.end_time, th.run_by, th.run_result").
 		Joins("LEFT JOIN task t ON th.task_id = t.id").
@@ -149,7 +149,7 @@ func ListTaskHistoryByPage(ec common.Rail, req ListTaskHistoryByPageReq) (*ListT
 		histories = []TaskHistoryWebVo{}
 	}
 
-	countq := mysql.GetMySql().
+	countq := mysql.GetConn().
 		Table("task_history th").
 		Select("count(th.id)").
 		Joins("LEFT JOIN task t ON th.task_id = t.id")
@@ -193,14 +193,14 @@ func DeclareTask(ec common.Rail, req DeclareTaskReq) error {
 
 		slt := "select id from task where app_group = ? and target_bean = ? limit 1"
 		var id int
-		tx := mysql.GetMySql().Raw(slt, *appGroup, *req.TargetBean).Scan(&id)
+		tx := mysql.GetConn().Raw(slt, *appGroup, *req.TargetBean).Scan(&id)
 		if tx.Error != nil {
 			return nil, tx.Error
 		}
 
 		if tx.RowsAffected < 1 {
 			ist := "insert into task (job_name, cron_expr, enabled, concurrent_enabled, target_bean, app_group, update_by, update_date) values (?, ?, ?, ?, ?, ?, ?, ?)"
-			tx := mysql.GetMySql().Exec(ist, *req.JobName, *req.CronExpr, *req.Enabled, *req.ConcurrentEnabled, *req.TargetBean, *req.AppGroup, "JobDeclaration", time.Now())
+			tx := mysql.GetConn().Exec(ist, *req.JobName, *req.CronExpr, *req.Enabled, *req.ConcurrentEnabled, *req.TargetBean, *req.AppGroup, "JobDeclaration", time.Now())
 			return nil, tx.Error
 		}
 
@@ -209,7 +209,7 @@ func DeclareTask(ec common.Rail, req DeclareTaskReq) error {
 		}
 
 		udt := "update task set cron_expr = ?, concurrent_enabled = ?, enabled = ?, update_by = ?, update_date = ? where id = ?"
-		return nil, mysql.GetMySql().Exec(udt, *req.CronExpr, *req.ConcurrentEnabled, *req.Enabled, "JobDeclaration", time.Now(), id).Error
+		return nil, mysql.GetConn().Exec(udt, *req.CronExpr, *req.ConcurrentEnabled, *req.Enabled, "JobDeclaration", time.Now(), id).Error
 	})
 	return e
 }

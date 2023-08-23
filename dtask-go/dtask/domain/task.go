@@ -156,7 +156,7 @@ type DisableTaskReqVo struct {
 }
 
 func DisableTask(ec common.Rail, req DisableTaskReqVo) error {
-	qry := mysql.GetMySql()
+	qry := mysql.GetConn()
 	qry = qry.Table("task").Where("id = ?", req.Id)
 
 	umap := make(map[string]any)
@@ -174,7 +174,7 @@ func DisableTask(ec common.Rail, req DisableTaskReqVo) error {
 
 func IsEnabledTask(ec common.Rail, taskId int) error {
 	var id int
-	if tx := mysql.GetMySql().Raw("select id from task where id = ? and enabled = 1", taskId).Scan(&id); tx.Error != nil {
+	if tx := mysql.GetConn().Raw("select id from task where id = ? and enabled = 1", taskId).Scan(&id); tx.Error != nil {
 		return tx.Error
 	}
 
@@ -199,7 +199,7 @@ func UpdateTaskLastRunInfo(ec common.Rail, req UpdateLastRunInfoReq) error {
 		panic("lastRunEndTime is required")
 	}
 
-	qry := mysql.GetMySql()
+	qry := mysql.GetConn()
 	qry = qry.Table("task").Where("id = ?", req.Id)
 
 	st := time.Time(*req.LastRunStartTime)
@@ -251,7 +251,7 @@ func TriggerTask(ec common.Rail, req TriggerTaskReqVo, user common.User) error {
 
 func FindTaskAppGroup(id int) (*TaskIdAppGroup, error) {
 	var ta TaskIdAppGroup
-	tx := mysql.GetMySql().Raw("select id, app_group from task where id = ?", id).Scan(&ta)
+	tx := mysql.GetConn().Raw("select id, app_group from task where id = ?", id).Scan(&ta)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
@@ -261,7 +261,7 @@ func FindTaskAppGroup(id int) (*TaskIdAppGroup, error) {
 // Update task
 func UpdateTask(ec common.Rail, req UpdateTaskReq, user common.User) error {
 
-	qry := mysql.GetMySql()
+	qry := mysql.GetConn()
 	qry = qry.Table("task").Where("id = ?", req.Id)
 
 	umap := make(map[string]any)
@@ -298,7 +298,7 @@ func UpdateTask(ec common.Rail, req UpdateTaskReq, user common.User) error {
 func ListAllTasks(ec common.Rail, appGroup string) (*[]TaskWebVo, error) {
 
 	var tasks []TaskWebVo
-	selectq := mysql.GetMySql().Table("task").Where("app_group = ?", appGroup)
+	selectq := mysql.GetConn().Table("task").Where("app_group = ?", appGroup)
 
 	tx := selectq.Scan(&tasks)
 	if tx.Error != nil {
@@ -318,7 +318,7 @@ func ListTaskByPage(ec common.Rail, req ListTaskByPageReqWebVo) (*ListTaskByPage
 	}
 
 	var tasks []TaskWebVo
-	selectq := mysql.GetMySql().
+	selectq := mysql.GetConn().
 		Table("task").
 		Limit(req.Paging.Limit).
 		Offset(req.Paging.GetOffset()).
@@ -334,7 +334,7 @@ func ListTaskByPage(ec common.Rail, req ListTaskByPageReqWebVo) (*ListTaskByPage
 		tasks = []TaskWebVo{}
 	}
 
-	countq := mysql.GetMySql().
+	countq := mysql.GetConn().
 		Table("task").
 		Select("COUNT(*)")
 
