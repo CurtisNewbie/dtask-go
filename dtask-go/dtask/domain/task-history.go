@@ -3,9 +3,9 @@ package domain
 import (
 	"time"
 
-	"github.com/curtisnewbie/gocommon/common"
-	"github.com/curtisnewbie/gocommon/mysql"
-	"github.com/curtisnewbie/gocommon/redis"
+	"github.com/curtisnewbie/miso/core"
+	"github.com/curtisnewbie/miso/mysql"
+	"github.com/curtisnewbie/miso/redis"
 	"gorm.io/gorm"
 )
 
@@ -21,10 +21,10 @@ type TaskHistoryWebVo struct {
 	TaskId *int `json:"taskId"`
 
 	/** start time */
-	StartTime *common.TTime `json:"startTime"`
+	StartTime *core.TTime `json:"startTime"`
 
 	/** end time */
-	EndTime *common.TTime `json:"endTime"`
+	EndTime *core.TTime `json:"endTime"`
 
 	/** task triggered by */
 	RunBy *string `json:"runBy"`
@@ -35,7 +35,7 @@ type TaskHistoryWebVo struct {
 
 type ListTaskHistoryByPageResp struct {
 	Histories *[]TaskHistoryWebVo `json:"list"`
-	Paging    common.Paging       `json:"pagingVo"`
+	Paging    core.Paging       `json:"pagingVo"`
 }
 
 type ListTaskHistoryByPageReq struct {
@@ -47,15 +47,15 @@ type ListTaskHistoryByPageReq struct {
 	JobName *string `json:"jobName"`
 
 	/** start time */
-	StartTime *common.TTime `json:"startTime"`
+	StartTime *core.TTime `json:"startTime"`
 
 	/** end time */
-	EndTime *common.TTime `json:"endTime"`
+	EndTime *core.TTime `json:"endTime"`
 
 	/** task triggered by */
 	RunBy *string `json:"runBy"`
 
-	Paging *common.Paging `json:"pagingVo"`
+	Paging *core.Paging `json:"pagingVo"`
 }
 
 type RecordTaskHistoryReq struct {
@@ -64,10 +64,10 @@ type RecordTaskHistoryReq struct {
 	TaskId int `json:"taskId"`
 
 	/** start time */
-	StartTime *common.TTime `json:"startTime"`
+	StartTime *core.TTime `json:"startTime"`
 
 	/** end time */
-	EndTime *common.TTime `json:"endTime"`
+	EndTime *core.TTime `json:"endTime"`
 
 	/** task triggered by */
 	RunBy *string `json:"runBy"`
@@ -100,7 +100,7 @@ type DeclareTaskReq struct {
 	Overridden *bool `json:"overridden" validation:"notNil"`
 }
 
-func RecordTaskHistory(ec common.Rail, req RecordTaskHistoryReq) error {
+func RecordTaskHistory(ec core.Rail, req RecordTaskHistoryReq) error {
 
 	db := mysql.GetConn().Table("task_history")
 	m := make(map[string]any)
@@ -123,10 +123,10 @@ func RecordTaskHistory(ec common.Rail, req RecordTaskHistoryReq) error {
 }
 
 // List tasks
-func ListTaskHistoryByPage(ec common.Rail, req ListTaskHistoryByPageReq) (*ListTaskHistoryByPageResp, error) {
+func ListTaskHistoryByPage(ec core.Rail, req ListTaskHistoryByPageReq) (*ListTaskHistoryByPageResp, error) {
 
 	if req.Paging == nil {
-		req.Paging = &common.Paging{Limit: 30, Page: 1}
+		req.Paging = &core.Paging{Limit: 30, Page: 1}
 	}
 
 	var histories []TaskHistoryWebVo
@@ -170,7 +170,7 @@ func _addWhereForListTaskHistoryByPage(req *ListTaskHistoryByPageReq, query *gor
 	if req.TaskId != nil {
 		*query = *query.Where("th.task_id = ?", *req.TaskId)
 	}
-	if req.JobName != nil && !common.IsBlankStr(*req.JobName) {
+	if req.JobName != nil && !core.IsBlankStr(*req.JobName) {
 		*query = *query.Where("t.job_name like ?", "%"+*req.JobName+"%")
 	}
 	if req.StartTime != nil {
@@ -187,7 +187,7 @@ func _addWhereForListTaskHistoryByPage(req *ListTaskHistoryByPageReq, query *gor
 }
 
 // Declare task
-func DeclareTask(ec common.Rail, req DeclareTaskReq) error {
+func DeclareTask(ec core.Rail, req DeclareTaskReq) error {
 	appGroup := req.AppGroup
 	_, e := redis.RLockRun(ec, "task:declare:dtaskgo:"+*appGroup, func() (any, error) {
 

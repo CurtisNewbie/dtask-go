@@ -5,9 +5,9 @@ import (
 	"os"
 
 	"github.com/curtisnewbie/dtask/web"
-	"github.com/curtisnewbie/gocommon/common"
 	"github.com/curtisnewbie/gocommon/goauth"
-	"github.com/curtisnewbie/gocommon/server"
+	"github.com/curtisnewbie/miso/core"
+	"github.com/curtisnewbie/miso/server"
 )
 
 const (
@@ -17,7 +17,7 @@ const (
 
 func main() {
 
-	server.PostServerBootstrapped(func(rail common.Rail) error {
+	server.PostServerBootstrapped(func(rail core.Rail) error {
 		if goauth.IsEnabled() {
 			if e := goauth.AddResourceAsync(rail, goauth.AddResourceReq{Code: MNG_TASK_CODE, Name: MNG_TASK_NAME}); e != nil {
 				return fmt.Errorf("gclient.AddResource, %v", e)

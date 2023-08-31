@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"github.com/curtisnewbie/gocommon/common"
-	"github.com/curtisnewbie/gocommon/mysql"
-	"github.com/curtisnewbie/gocommon/redis"
+	"github.com/curtisnewbie/miso/core"
+	"github.com/curtisnewbie/miso/mysql"
+	"github.com/curtisnewbie/miso/redis"
 	"gorm.io/gorm"
 )
 
@@ -64,10 +65,10 @@ type TaskWebVo struct {
 	AppGroup string `json:"appGroup"`
 
 	/** the last time this task was executed */
-	LastRunStartTime *common.TTime `json:"lastRunStartTime"`
+	LastRunStartTime *core.TTime `json:"lastRunStartTime"`
 
 	/** the last time this task was finished */
-	LastRunEndTime *common.TTime `json:"lastRunEndTime"`
+	LastRunEndTime *core.TTime `json:"lastRunEndTime"`
 
 	/** app that previously ran this task */
 	LastRunBy string `json:"lastRunBy"`
@@ -82,7 +83,7 @@ type TaskWebVo struct {
 	ConcurrentEnabled TaskConcurrentEnabled `json:"concurrentEnabled"`
 
 	/** update date */
-	UpdateDate *common.TTime `json:"updateDate"`
+	UpdateDate *core.TTime `json:"updateDate"`
 
 	/** updated by */
 	UpdateBy string `json:"updateBy"`
@@ -90,11 +91,11 @@ type TaskWebVo struct {
 
 type ListTaskByPageRespWebVo struct {
 	Tasks  *[]TaskWebVo  `json:"list"`
-	Paging common.Paging `json:"pagingVo"`
+	Paging core.Paging `json:"pagingVo"`
 }
 
 type ListTaskByPageReqWebVo struct {
-	Paging *common.Paging `json:"pagingVo"`
+	Paging *core.Paging `json:"pagingVo"`
 
 	/** job's name */
 	JobName *string `json:"jobName"`
@@ -128,10 +129,10 @@ type UpdateLastRunInfoReq struct {
 	Id *int `json:"id"`
 
 	/** the last time this task was executed */
-	LastRunStartTime *common.TTime `json:"lastRunStartTime"`
+	LastRunStartTime *core.TTime `json:"lastRunStartTime"`
 
 	/** the last time this task was finished */
-	LastRunEndTime *common.TTime `json:"lastRunEndTime"`
+	LastRunEndTime *core.TTime `json:"lastRunEndTime"`
 
 	/** app that previously ran this task */
 	LastRunBy *string `json:"lastRunBy"`
@@ -149,13 +150,13 @@ type DisableTaskReqVo struct {
 	LastRunResult string `json:"lastRunResult"`
 
 	/** update date */
-	UpdateDate common.TTime `json:"updateDate"`
+	UpdateDate core.TTime `json:"updateDate"`
 
 	/** updated by */
 	UpdateBy string `json:"updateBy"`
 }
 
-func DisableTask(ec common.Rail, req DisableTaskReqVo) error {
+func DisableTask(ec core.Rail, req DisableTaskReqVo) error {
 	qry := mysql.GetConn()
 	qry = qry.Table("task").Where("id = ?", req.Id)
 
@@ -172,19 +173,19 @@ func DisableTask(ec common.Rail, req DisableTaskReqVo) error {
 	return nil
 }
 
-func IsEnabledTask(ec common.Rail, taskId int) error {
+func IsEnabledTask(ec core.Rail, taskId int) error {
 	var id int
 	if tx := mysql.GetConn().Raw("select id from task where id = ? and enabled = 1", taskId).Scan(&id); tx.Error != nil {
 		return tx.Error
 	}
 
 	if id < 1 {
-		return common.NewWebErr("Task not found or disabled")
+		return core.NewWebErr("Task not found or disabled")
 	}
 	return nil
 }
 
-func UpdateTaskLastRunInfo(ec common.Rail, req UpdateLastRunInfoReq) error {
+func UpdateTaskLastRunInfo(ec core.Rail, req UpdateLastRunInfoReq) error {
 	ec.Infof("Received: %+v", req)
 	if req.Id == nil {
 		panic("id is required")
@@ -225,7 +226,7 @@ func UpdateTaskLastRunInfo(ec common.Rail, req UpdateLastRunInfoReq) error {
 }
 
 // Trigger a task
-func TriggerTask(ec common.Rail, req TriggerTaskReqVo, user common.User) error {
+func TriggerTask(ec core.Rail, req TriggerTaskReqVo, user common.User) error {
 	ta, e := FindTaskAppGroup(*req.Id)
 	if e != nil {
 		return e
@@ -259,23 +260,23 @@ func FindTaskAppGroup(id int) (*TaskIdAppGroup, error) {
 }
 
 // Update task
-func UpdateTask(ec common.Rail, req UpdateTaskReq, user common.User) error {
+func UpdateTask(ec core.Rail, req UpdateTaskReq, user common.User) error {
 
 	qry := mysql.GetConn()
 	qry = qry.Table("task").Where("id = ?", req.Id)
 
 	umap := make(map[string]any)
 
-	if req.JobName != nil && !common.IsBlankStr(*req.JobName) {
+	if req.JobName != nil && !core.IsBlankStr(*req.JobName) {
 		umap["job_name"] = *req.JobName
 	}
-	if req.TargetBean != nil && !common.IsBlankStr(*req.TargetBean) {
+	if req.TargetBean != nil && !core.IsBlankStr(*req.TargetBean) {
 		umap["target_bean"] = *req.TargetBean
 	}
-	if req.CronExpr != nil && !common.IsBlankStr(*req.CronExpr) {
+	if req.CronExpr != nil && !core.IsBlankStr(*req.CronExpr) {
 		umap["cron_expr"] = *req.CronExpr
 	}
-	if req.AppGroup != nil && !common.IsBlankStr(*req.AppGroup) {
+	if req.AppGroup != nil && !core.IsBlankStr(*req.AppGroup) {
 		umap["app_group"] = *req.AppGroup
 	}
 	if req.Enabled != nil {
@@ -295,7 +296,7 @@ func UpdateTask(ec common.Rail, req UpdateTaskReq, user common.User) error {
 }
 
 // List all tasks for the appGroup
-func ListAllTasks(ec common.Rail, appGroup string) (*[]TaskWebVo, error) {
+func ListAllTasks(ec core.Rail, appGroup string) (*[]TaskWebVo, error) {
 
 	var tasks []TaskWebVo
 	selectq := mysql.GetConn().Table("task").Where("app_group = ?", appGroup)
@@ -312,9 +313,9 @@ func ListAllTasks(ec common.Rail, appGroup string) (*[]TaskWebVo, error) {
 }
 
 // List tasks
-func ListTaskByPage(ec common.Rail, req ListTaskByPageReqWebVo) (*ListTaskByPageRespWebVo, error) {
+func ListTaskByPage(ec core.Rail, req ListTaskByPageReqWebVo) (*ListTaskByPageRespWebVo, error) {
 	if req.Paging == nil {
-		req.Paging = &common.Paging{Limit: 30, Page: 1}
+		req.Paging = &core.Paging{Limit: 30, Page: 1}
 	}
 
 	var tasks []TaskWebVo
@@ -350,10 +351,10 @@ func ListTaskByPage(ec common.Rail, req ListTaskByPageReqWebVo) (*ListTaskByPage
 }
 
 func _addWhereForListTaskByPage(req *ListTaskByPageReqWebVo, query *gorm.DB) *gorm.DB {
-	if req.JobName != nil && !common.IsBlankStr(*req.JobName) {
+	if req.JobName != nil && !core.IsBlankStr(*req.JobName) {
 		*query = *query.Where("job_name like ?", "%"+*req.JobName+"%")
 	}
-	if req.AppGroup != nil && !common.IsBlankStr(*req.AppGroup) {
+	if req.AppGroup != nil && !core.IsBlankStr(*req.AppGroup) {
 		*query = *query.Where("app_group like ?", "%"+*req.AppGroup+"%")
 	}
 	if req.Enabled != nil {
