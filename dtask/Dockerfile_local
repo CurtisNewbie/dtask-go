@@ -1,0 +1,16 @@
+FROM alpine:3.17
+
+LABEL author="Yongjie Zhuang"
+LABEL descrption="DTask GO - Task Web Console Backend"
+
+RUN apk --no-cache add tzdata
+
+WORKDIR /usr/src/
+
+# binary is pre-compiled
+COPY dtaskgo_build ./app_dtaskgo
+
+
+ENV TZ=Asia/Shanghai
+
+CMD ["./app_dtaskgo", "configFile=/usr/src/dtaskgo/config/app-conf-prod.yml"]
