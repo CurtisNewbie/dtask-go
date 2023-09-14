@@ -3,9 +3,7 @@ package domain
 import (
 	"time"
 
-	"github.com/curtisnewbie/miso/core"
-	"github.com/curtisnewbie/miso/mysql"
-	"github.com/curtisnewbie/miso/redis"
+	"github.com/curtisnewbie/miso/miso"
 	"gorm.io/gorm"
 )
 
@@ -21,10 +19,10 @@ type TaskHistoryWebVo struct {
 	TaskId *int `json:"taskId"`
 
 	/** start time */
-	StartTime *core.TTime `json:"startTime"`
+	StartTime *miso.TTime `json:"startTime"`
 
 	/** end time */
-	EndTime *core.TTime `json:"endTime"`
+	EndTime *miso.TTime `json:"endTime"`
 
 	/** task triggered by */
 	RunBy *string `json:"runBy"`
@@ -35,7 +33,7 @@ type TaskHistoryWebVo struct {
 
 type ListTaskHistoryByPageResp struct {
 	Histories *[]TaskHistoryWebVo `json:"list"`
-	Paging    core.Paging       `json:"pagingVo"`
+	Paging    miso.Paging       `json:"pagingVo"`
 }
 
 type ListTaskHistoryByPageReq struct {
@@ -47,15 +45,15 @@ type ListTaskHistoryByPageReq struct {
 	JobName *string `json:"jobName"`
 
 	/** start time */
-	StartTime *core.TTime `json:"startTime"`
+	StartTime *miso.TTime `json:"startTime"`
 
 	/** end time */
-	EndTime *core.TTime `json:"endTime"`
+	EndTime *miso.TTime `json:"endTime"`
 
 	/** task triggered by */
 	RunBy *string `json:"runBy"`
 
-	Paging *core.Paging `json:"pagingVo"`
+	Paging *miso.Paging `json:"pagingVo"`
 }
 
 type RecordTaskHistoryReq struct {
@@ -64,10 +62,10 @@ type RecordTaskHistoryReq struct {
 	TaskId int `json:"taskId"`
 
 	/** start time */
-	StartTime *core.TTime `json:"startTime"`
+	StartTime *miso.TTime `json:"startTime"`
 
 	/** end time */
-	EndTime *core.TTime `json:"endTime"`
+	EndTime *miso.TTime `json:"endTime"`
 
 	/** task triggered by */
 	RunBy *string `json:"runBy"`
@@ -100,9 +98,9 @@ type DeclareTaskReq struct {
 	Overridden *bool `json:"overridden" validation:"notNil"`
 }
 
-func RecordTaskHistory(ec core.Rail, req RecordTaskHistoryReq) error {
+func RecordTaskHistory(ec miso.Rail, req RecordTaskHistoryReq) error {
 
-	db := mysql.GetConn().Table("task_history")
+	db := miso.GetMySQL().Table("task_history")
 	m := make(map[string]any)
 
 	st := time.Time(*req.StartTime)
@@ -123,14 +121,14 @@ func RecordTaskHistory(ec core.Rail, req RecordTaskHistoryReq) error {
 }
 
 // List tasks
-func ListTaskHistoryByPage(ec core.Rail, req ListTaskHistoryByPageReq) (*ListTaskHistoryByPageResp, error) {
+func ListTaskHistoryByPage(ec miso.Rail, req ListTaskHistoryByPageReq) (*ListTaskHistoryByPageResp, error) {
 
 	if req.Paging == nil {
-		req.Paging = &core.Paging{Limit: 30, Page: 1}
+		req.Paging = &miso.Paging{Limit: 30, Page: 1}
 	}
 
 	var histories []TaskHistoryWebVo
-	selectq := mysql.GetConn().
+	selectq := miso.GetMySQL().
 		Table("task_history th").
 		Select("th.id, t.job_name, th.task_id, th.start_time, th.end_time, th.run_by, th.run_result").
 		Joins("LEFT JOIN task t ON th.task_id = t.id").
@@ -149,7 +147,7 @@ func ListTaskHistoryByPage(ec core.Rail, req ListTaskHistoryByPageReq) (*ListTas
 		histories = []TaskHistoryWebVo{}
 	}
 
-	countq := mysql.GetConn().
+	countq := miso.GetMySQL().
 		Table("task_history th").
 		Select("count(th.id)").
 		Joins("LEFT JOIN task t ON th.task_id = t.id")
@@ -170,7 +168,7 @@ func _addWhereForListTaskHistoryByPage(req *ListTaskHistoryByPageReq, query *gor
 	if req.TaskId != nil {
 		*query = *query.Where("th.task_id = ?", *req.TaskId)
 	}
-	if req.JobName != nil && !core.IsBlankStr(*req.JobName) {
+	if req.JobName != nil && !miso.IsBlankStr(*req.JobName) {
 		*query = *query.Where("t.job_name like ?", "%"+*req.JobName+"%")
 	}
 	if req.StartTime != nil {
@@ -187,20 +185,20 @@ func _addWhereForListTaskHistoryByPage(req *ListTaskHistoryByPageReq, query *gor
 }
 
 // Declare task
-func DeclareTask(ec core.Rail, req DeclareTaskReq) error {
+func DeclareTask(ec miso.Rail, req DeclareTaskReq) error {
 	appGroup := req.AppGroup
-	_, e := redis.RLockRun(ec, "task:declare:dtaskgo:"+*appGroup, func() (any, error) {
+	_, e := miso.RLockRun(ec, "task:declare:dtaskgo:"+*appGroup, func() (any, error) {
 
 		slt := "select id from task where app_group = ? and target_bean = ? limit 1"
 		var id int
-		tx := mysql.GetConn().Raw(slt, *appGroup, *req.TargetBean).Scan(&id)
+		tx := miso.GetMySQL().Raw(slt, *appGroup, *req.TargetBean).Scan(&id)
 		if tx.Error != nil {
 			return nil, tx.Error
 		}
 
 		if tx.RowsAffected < 1 {
 			ist := "insert into task (job_name, cron_expr, enabled, concurrent_enabled, target_bean, app_group, update_by, update_date) values (?, ?, ?, ?, ?, ?, ?, ?)"
-			tx := mysql.GetConn().Exec(ist, *req.JobName, *req.CronExpr, *req.Enabled, *req.ConcurrentEnabled, *req.TargetBean, *req.AppGroup, "JobDeclaration", time.Now())
+			tx := miso.GetMySQL().Exec(ist, *req.JobName, *req.CronExpr, *req.Enabled, *req.ConcurrentEnabled, *req.TargetBean, *req.AppGroup, "JobDeclaration", time.Now())
 			return nil, tx.Error
 		}
 
@@ -209,7 +207,7 @@ func DeclareTask(ec core.Rail, req DeclareTaskReq) error {
 		}
 
 		udt := "update task set cron_expr = ?, concurrent_enabled = ?, enabled = ?, update_by = ?, update_date = ? where id = ?"
-		return nil, mysql.GetConn().Exec(udt, *req.CronExpr, *req.ConcurrentEnabled, *req.Enabled, "JobDeclaration", time.Now(), id).Error
+		return nil, miso.GetMySQL().Exec(udt, *req.CronExpr, *req.ConcurrentEnabled, *req.Enabled, "JobDeclaration", time.Now(), id).Error
 	})
 	return e
 }
