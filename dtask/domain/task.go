@@ -88,8 +88,8 @@ type TaskWebVo struct {
 }
 
 type ListTaskByPageRespWebVo struct {
-	Tasks  *[]TaskWebVo  `json:"list"`
-	Paging miso.Paging `json:"pagingVo"`
+	Tasks  *[]TaskWebVo `json:"list"`
+	Paging miso.Paging  `json:"pagingVo"`
 }
 
 type ListTaskByPageReqWebVo struct {

@@ -33,7 +33,7 @@ type TaskHistoryWebVo struct {
 
 type ListTaskHistoryByPageResp struct {
 	Histories *[]TaskHistoryWebVo `json:"list"`
-	Paging    miso.Paging       `json:"pagingVo"`
+	Paging    miso.Paging         `json:"pagingVo"`
 }
 
 type ListTaskHistoryByPageReq struct {
